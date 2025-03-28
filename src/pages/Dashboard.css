@@ -61,6 +61,8 @@
   border-radius: 0.75rem;
   border: 1px solid #e5e7eb;
   transition: all 0.2s;
+  
+  margin: 1rem 1rem;
 }
 
 .stat-card:hover {
