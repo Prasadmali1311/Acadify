@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import './Sidebar.css';
 
 const Sidebar = () => {
   const navItems = [
@@ -8,22 +9,20 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="w-64 bg-white shadow-lg">
-      <div className="p-4">
-        <h1 className="text-2xl font-bold text-blue-600">Acadify</h1>
+    <div className="sidebar">
+      <div className="logo-container">
+        <h1 className="logo">Acadify</h1>
       </div>
-      <nav className="mt-4">
+      <nav className="nav-menu">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center px-4 py-2 ${
-                isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600'
-              }`
+              `nav-link ${isActive ? 'active' : ''}`
             }
           >
-            <span className="mr-2">{item.icon}</span>
+            <span className="nav-icon">{item.icon}</span>
             {item.label}
           </NavLink>
         ))}

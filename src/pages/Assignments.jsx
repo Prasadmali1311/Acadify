@@ -1,3 +1,5 @@
+import './Assignments.css';
+
 const Assignments = () => {
   const assignments = [
     { id: 1, title: 'React Basics', due: '2024-02-20', status: 'pending' },
@@ -6,22 +8,20 @@ const Assignments = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Assignments</h1>
-        <button className="btn-primary">New Assignment</button>
+    <div className="assignments-container">
+      <div className="header">
+        <h1 className="page-title">Assignments</h1>
+        <button className="new-assignment-btn">New Assignment</button>
       </div>
       
-      <div className="grid gap-4">
+      <div className="assignments-grid">
         {assignments.map(assignment => (
-          <div key={assignment.id} className="card flex justify-between items-center">
-            <div>
-              <h3 className="font-semibold">{assignment.title}</h3>
-              <p className="text-sm text-gray-500">Due: {assignment.due}</p>
+          <div key={assignment.id} className="assignment-card">
+            <div className="assignment-info">
+              <h3>{assignment.title}</h3>
+              <p className="assignment-due">Due: {assignment.due}</p>
             </div>
-            <span className={`px-3 py-1 rounded-full text-sm ${
-              assignment.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-            }`}>
+            <span className={`status-badge ${assignment.status}`}>
               {assignment.status}
             </span>
           </div>
