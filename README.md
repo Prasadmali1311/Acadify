@@ -1,1 +1,3 @@
+# Acadify
+
 # react + vite
