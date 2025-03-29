@@ -85,8 +85,8 @@ const Dashboard = () => {
           </div>
           <div className="space-y-4">
             <div className="deadline-item high-priority">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
+              <div className="flex">
+                <div>
                   <h4 className="font-medium text-blue-900">Final Project</h4>
                   <p className="text-sm text-blue-700">Due in 5 days</p>
                 </div>
@@ -94,8 +94,8 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="deadline-item medium-priority">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
+              <div className="flex">
+                <div>
                   <h4 className="font-medium text-purple-900">Literature Review</h4>
                   <p className="text-sm text-purple-700">Due in 1 week</p>
                 </div>
