@@ -2,11 +2,19 @@
   width: 16rem;
   background-color: white;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .logo-container {
   padding: 1rem;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 10;
 }
 
 .logo {
@@ -16,13 +24,13 @@
 }
 
 .nav-menu {
-  margin-top: 1rem;
+  padding: 1rem 0;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   color: #4b5563;
   text-decoration: none;
   transition: all 0.2s;
@@ -39,6 +47,6 @@
 }
 
 .nav-icon {
-  margin-right: 0.5rem;
+  margin-right: 0.75rem;
   font-size: 1.25rem;
 } 

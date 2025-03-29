@@ -5,14 +5,23 @@
 
 .main-container {
   flex: 1;
+  margin-left: 16rem; /* Same as sidebar width */
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
-.content {
+.main-content {
   flex: 1;
   padding: 2rem;
   background-color: #f9fafb;
+  overflow-y: auto;
+}
+
+.content-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* Common utility classes */
