@@ -1,18 +1,28 @@
 .header {
   background-color: white;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  height: 4rem;
+  padding: 1rem;
   display: flex;
   align-items: center;
-  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 
 .search-container {
   flex: 1;
+  margin-left: 3.5rem; /* Space for menu button */
+}
+
+@media (min-width: 768px) {
+  .search-container {
+    margin-left: 0;
+  }
 }
 
 .search-input {
-  width: 16rem;
+  width: 100%;
+  max-width: 16rem;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
@@ -62,4 +72,11 @@
 .username {
   font-weight: 500;
   color: #111827;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .username {
+    display: block;
+  }
 } 
