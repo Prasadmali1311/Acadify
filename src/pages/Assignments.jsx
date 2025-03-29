@@ -9,7 +9,7 @@ const Assignments = () => {
 
   return (
     <div className="assignments-container">
-      <div className="header">
+      <div className="assignments-header">
         <h1 className="page-title">Assignments</h1>
         <button className="new-assignment-btn">New Assignment</button>
       </div>

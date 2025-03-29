@@ -2,18 +2,41 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.header {
+.assignments-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .assignments-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+  }
 }
 
 .page-title {
-  font-size: 1.875rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .page-title {
+    font-size: 1.875rem;
+  }
 }
 
 .new-assignment-btn {
@@ -23,6 +46,14 @@
   border-radius: 0.5rem;
   font-weight: 500;
   transition: all 0.2s;
+  width: 100%;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .new-assignment-btn {
+    width: auto;
+  }
 }
 
 .new-assignment-btn:hover {
@@ -32,19 +63,36 @@
 
 .assignments-grid {
   display: grid;
-  gap: 2rem;
-  margin: 0 1rem;
+  gap: 1rem;
+  padding: 0 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .assignments-grid {
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+  }
 }
 
 .assignment-card {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
   padding: 1rem;
   background-color: white;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
+}
+
+@media (min-width: 640px) {
+  .assignment-card {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 
 .assignment-card:hover {
@@ -66,6 +114,7 @@
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.875rem;
+  text-align: center;
 }
 
 .status-badge.completed {
