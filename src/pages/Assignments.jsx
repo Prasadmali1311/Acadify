@@ -10,7 +10,7 @@ const Assignments = () => {
   return (
     <div className="assignments-container">
       <div className="assignments-header">
-        <h1 className="page-title">Assignments</h1>
+        <h1 className="page-title" style={{ margin: '0' }}>Assignments</h1>
         <button className="new-assignment-btn">New Assignment</button>
       </div>
       
