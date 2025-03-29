@@ -9,12 +9,32 @@
   width: 16rem;
   transition: left 0.3s ease;
   z-index: 50;
+  box-sizing: border-box;
 }
 
-/* Show sidebar on desktop */
+/* Show sidebar on tablet and desktop */
 @media (min-width: 768px) {
   .sidebar {
     left: 0;
+  }
+}
+
+/* Tablet-specific adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar {
+    width: 14rem;
+  }
+  
+  .main-container {
+    margin-left: 14rem;
+  }
+  
+  .nav-link {
+    padding: 0.625rem 0.875rem;
+  }
+  
+  .nav-icon {
+    margin-right: 0.5rem;
   }
 }
 
