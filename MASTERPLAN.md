@@ -1,4 +1,4 @@
-# AssignmentHub Master Plan
+# Acadify Master Plan
 
 ## App Overview
 A free, centralized e-learning platform for assignment submission and progress tracking.
