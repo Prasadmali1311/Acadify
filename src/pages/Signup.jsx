@@ -1,44 +1,49 @@
 import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const Login = () => {
+const Signup = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('student');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login, loginWithGoogle } = useAuth();
-
-  const from = location.state?.from?.pathname || '/';
+  const { signup, loginWithGoogle } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await login(email, password);
-      navigate(from, { replace: true });
+      await signup(email, password, role);
+      navigate('/');
     } catch (error) {
-      setError('Failed to sign in. Please check your credentials.');
-      console.error('Login error:', error);
+      setError('Failed to create an account. ' + error.message);
+      console.error('Signup error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignup = async () => {
     setError('');
     setLoading(true);
 
     try {
       await loginWithGoogle();
-      navigate(from, { replace: true });
+      navigate('/');
     } catch (error) {
       setError('Failed to sign in with Google. ' + error.message);
-      console.error('Google login error:', error);
+      console.error('Google signup error:', error);
     } finally {
       setLoading(false);
     }
@@ -47,7 +52,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <h2 className="text-3xl font-bold text-center">Welcome to Acadify</h2>
+        <h2 className="text-3xl font-bold text-center">Create an Account</h2>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error}
@@ -80,12 +85,39 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          <div>
+            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
+              Confirm Password
+            </label>
+            <input
+              id="confirm-password"
+              type="password"
+              required
+              className="mt-1 p-2 w-full border rounded-md"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+              Role
+            </label>
+            <select
+              id="role"
+              className="mt-1 p-2 w-full border rounded-md"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="student">Student</option>
+              <option value="instructor">Instructor</option>
+            </select>
+          </div>
           <button
             type="submit"
             disabled={loading}
             className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 
@@ -101,7 +133,7 @@ const Login = () => {
 
           <div className="mt-6">
             <button
-              onClick={handleGoogleLogin}
+              onClick={handleGoogleSignup}
               disabled={loading}
               className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
             >
@@ -123,16 +155,16 @@ const Login = () => {
                   fill="#EA4335"
                 />
               </svg>
-              Sign in with Google
+              Sign up with Google
             </button>
           </div>
         </div>
 
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign up
+            Already have an account?{' '}
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              Sign in
             </Link>
           </p>
         </div>
@@ -141,4 +173,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup; 
