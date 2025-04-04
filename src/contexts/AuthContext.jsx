@@ -7,7 +7,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
 const AuthContext = createContext();
@@ -51,18 +51,36 @@ export function AuthProvider({ children }) {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
+    console.log('Google user data:', user);
+    console.log('Google photo URL:', user.photoURL);
+    
     // Check if user document exists
     const userDoc = await getDoc(doc(db, 'users', user.uid));
     
     if (!userDoc.exists()) {
+      // Extract first and last name from Google display name
+      const displayNameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
+      const firstName = displayNameParts[0] || '';
+      const lastName = displayNameParts.slice(1).join(' ') || '';
+      
       // Create user document if it doesn't exist
       await setDoc(doc(db, 'users', user.uid), {
         email: user.email,
-        firstName: user.displayName ? user.displayName.split(' ')[0] : '',
-        lastName: user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '',
+        firstName: firstName,
+        lastName: lastName,
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
         role: 'student', // Default role
         createdAt: new Date().toISOString()
       });
+    } else {
+      // Update existing user with Google data if needed
+      const userData = userDoc.data();
+      if (!userData.photoURL && user.photoURL) {
+        await updateDoc(doc(db, 'users', user.uid), {
+          photoURL: user.photoURL
+        });
+      }
     }
     
     return user;
@@ -101,10 +119,31 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        console.log('Auth state changed - User:', user);
+        console.log('User photo URL:', user.photoURL);
+        
         const role = await getUserRole(user.uid);
         const profile = await getUserProfile(user.uid);
+        
+        console.log('User profile from Firestore:', profile);
+        
+        // Create a user object with all available data
+        const userWithProfile = {
+          ...user,
+          role,
+          profile: profile || {
+            // Include Google profile data if available
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            email: user.email || ''
+          }
+        };
+        
+        console.log('Final user object:', userWithProfile);
+        console.log('Final photo URL:', userWithProfile.photoURL || userWithProfile.profile?.photoURL);
+        
         setUserRole(role);
-        setCurrentUser({ ...user, role, profile });
+        setCurrentUser(userWithProfile);
       } else {
         setCurrentUser(null);
         setUserRole(null);

@@ -30,7 +30,7 @@ const Login = () => {
       setError('');
       setLoading(true);
       await loginWithGoogle();
-      navigate('/dashboard');
+      navigate(from, { replace: true });
     } catch (error) {
       setError('Failed to sign in with Google.');
     } finally {

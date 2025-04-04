@@ -60,8 +60,39 @@ const Header = () => {
       return `${currentUser.profile.firstName} ${currentUser.profile.lastName}`;
     }
     
+    // If we have a display name from Google
+    if (currentUser.profile && currentUser.profile.displayName) {
+      return currentUser.profile.displayName;
+    }
+    
+    // If we have a display name directly on the user object
+    if (currentUser.displayName) {
+      return currentUser.displayName;
+    }
+    
     // Fallback to email
     return currentUser.email || 'User';
+  };
+
+  // Check if user has a profile photo
+  const hasProfilePhoto = () => {
+    // Debug logs
+    console.log('Current User:', currentUser);
+    console.log('Photo URL (direct):', currentUser?.photoURL);
+    console.log('Photo URL (profile):', currentUser?.profile?.photoURL);
+    
+    // Check both possible locations for the photo URL
+    const hasPhoto = currentUser?.photoURL || currentUser?.profile?.photoURL ? true : false;
+    console.log('Has profile photo:', hasPhoto);
+    return hasPhoto;
+  };
+
+  // Get profile photo URL
+  const getProfilePhotoUrl = () => {
+    // Try to get the photo URL from both possible locations
+    const photoUrl = currentUser?.photoURL || currentUser?.profile?.photoURL || '';
+    console.log('Using photo URL:', photoUrl);
+    return photoUrl;
   };
 
   return (
@@ -82,18 +113,36 @@ const Header = () => {
             className="user-profile" 
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
           >
-            <div className="avatar">
-              {getUserInitials()}
-            </div>
+            {hasProfilePhoto() ? (
+              <img 
+                src={getProfilePhotoUrl()} 
+                alt="Profile" 
+                className="avatar profile-photo"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="avatar">
+                {getUserInitials()}
+              </div>
+            )}
             <span className="username">{getUserDisplayName()}</span>
           </div>
           
           {isProfileMenuOpen && (
             <div className="profile-dropdown">
               <div className="profile-header">
-                <div className="profile-avatar">
-                  {getUserInitials()}
-                </div>
+                {hasProfilePhoto() ? (
+                  <img 
+                    src={getProfilePhotoUrl()} 
+                    alt="Profile" 
+                    className="profile-avatar profile-photo"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="profile-avatar">
+                    {getUserInitials()}
+                  </div>
+                )}
                 <div className="profile-info">
                   <div className="profile-name">{getUserDisplayName()}</div>
                   <div className="profile-email">{currentUser?.email}</div>
