@@ -64,12 +64,6 @@ const Header = () => {
     return currentUser.email || 'User';
   };
 
-  // Get user's full profile information
-  const getUserProfileInfo = () => {
-    if (!currentUser || !currentUser.profile) return {};
-    return currentUser.profile;
-  };
-
   return (
     <header className="header">
       <div className="search-container">
