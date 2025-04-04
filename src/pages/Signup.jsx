@@ -28,22 +28,18 @@ const Signup = () => {
 
     try {
       // Create user with email and password
-      const user = await signup(email, password, role);
+      const userCredential = await signup(email, password, role);
       
       // Update user profile with additional information
-      if (user && user.uid) {
-        const userData = {
-          firstName,
-          lastName,
-          email,
-          mobileNumber,
-          role,
-          createdAt: new Date().toISOString()
-        };
-        
-        // Update the user document with additional information
-        await updateUserProfile(user.uid, userData);
-      }
+      const user = userCredential.user;
+      await updateUserProfile(user.uid, {
+        firstName,
+        lastName,
+        email,
+        mobileNumber,
+        role,
+        createdAt: new Date().toISOString()
+      });
       
       navigate('/');
     } catch (error) {
@@ -69,16 +65,12 @@ const Signup = () => {
     }
   };
 
-  // Function to update user profile with additional information
+  // Function to update user profile in Firestore
   const updateUserProfile = async (uid, userData) => {
-    try {
-      const { doc, setDoc } = await import('firebase/firestore');
-      const { db } = await import('../firebase/config');
-      
-      await setDoc(doc(db, 'users', uid), userData, { merge: true });
-    } catch (error) {
-      console.error('Error updating user profile:', error);
-    }
+    const { db } = await import('../firebase/config');
+    const { doc, setDoc } = await import('firebase/firestore');
+    
+    await setDoc(doc(db, 'users', uid), userData);
   };
 
   return (

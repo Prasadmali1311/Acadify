@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import './Header.css';
 
 const Header = () => {
-  const { currentUser, userRole, userProfile, logout } = useAuth();
+  const { currentUser, userRole, logout } = useAuth();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const navigate = useNavigate();
@@ -36,10 +36,14 @@ const Header = () => {
   const getUserInitials = () => {
     if (!currentUser) return 'U';
     
-    if (userProfile && userProfile.firstName && userProfile.lastName) {
-      return `${userProfile.firstName.charAt(0)}${userProfile.lastName.charAt(0)}`.toUpperCase();
+    // If we have profile data with first and last name
+    if (currentUser.profile && currentUser.profile.firstName && currentUser.profile.lastName) {
+      const firstInitial = currentUser.profile.firstName.charAt(0).toUpperCase();
+      const lastInitial = currentUser.profile.lastName.charAt(0).toUpperCase();
+      return `${firstInitial}${lastInitial}`;
     }
     
+    // Fallback to email initial
     if (currentUser.email) {
       return currentUser.email.charAt(0).toUpperCase();
     }
@@ -51,15 +55,19 @@ const Header = () => {
   const getUserDisplayName = () => {
     if (!currentUser) return 'User';
     
-    if (userProfile && userProfile.firstName && userProfile.lastName) {
-      return `${userProfile.firstName} ${userProfile.lastName}`;
+    // If we have profile data with first and last name
+    if (currentUser.profile && currentUser.profile.firstName && currentUser.profile.lastName) {
+      return `${currentUser.profile.firstName} ${currentUser.profile.lastName}`;
     }
     
-    if (currentUser.email) {
-      return currentUser.email;
-    }
-    
-    return 'User';
+    // Fallback to email
+    return currentUser.email || 'User';
+  };
+
+  // Get user's full profile information
+  const getUserProfileInfo = () => {
+    if (!currentUser || !currentUser.profile) return {};
+    return currentUser.profile;
   };
 
   return (
@@ -94,6 +102,7 @@ const Header = () => {
                 </div>
                 <div className="profile-info">
                   <div className="profile-name">{getUserDisplayName()}</div>
+                  <div className="profile-email">{currentUser?.email}</div>
                   <div className="profile-role">{userRole || 'User'}</div>
                 </div>
               </div>
