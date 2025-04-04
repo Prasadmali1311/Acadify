@@ -3,7 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const Signup = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('student');
@@ -24,7 +27,24 @@ const Signup = () => {
     }
 
     try {
-      await signup(email, password, role);
+      // Create user with email and password
+      const user = await signup(email, password, role);
+      
+      // Update user profile with additional information
+      if (user && user.uid) {
+        const userData = {
+          firstName,
+          lastName,
+          email,
+          mobileNumber,
+          role,
+          createdAt: new Date().toISOString()
+        };
+        
+        // Update the user document with additional information
+        await updateUserProfile(user.uid, userData);
+      }
+      
       navigate('/');
     } catch (error) {
       setError('Failed to create an account. ' + error.message);
@@ -49,6 +69,18 @@ const Signup = () => {
     }
   };
 
+  // Function to update user profile with additional information
+  const updateUserProfile = async (uid, userData) => {
+    try {
+      const { doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      
+      await setDoc(doc(db, 'users', uid), userData, { merge: true });
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
@@ -59,6 +91,35 @@ const Signup = () => {
           </div>
         )}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                First Name
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                required
+                className="mt-1 p-2 w-full border rounded-md"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                Last Name
+              </label>
+              <input
+                id="lastName"
+                type="text"
+                required
+                className="mt-1 p-2 w-full border rounded-md"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
+          </div>
+          
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -72,6 +133,21 @@ const Signup = () => {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
+          
+          <div>
+            <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700">
+              Mobile Number
+            </label>
+            <input
+              id="mobileNumber"
+              type="tel"
+              required
+              className="mt-1 p-2 w-full border rounded-md"
+              value={mobileNumber}
+              onChange={(e) => setMobileNumber(e.target.value)}
+            />
+          </div>
+          
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
@@ -85,6 +161,7 @@ const Signup = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          
           <div>
             <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
               Confirm Password
@@ -98,6 +175,7 @@ const Signup = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
+          
           <div>
             <label htmlFor="role" className="block text-sm font-medium text-gray-700">
               Role
@@ -112,6 +190,7 @@ const Signup = () => {
               <option value="instructor">Instructor</option>
             </select>
           </div>
+          
           <button
             type="submit"
             disabled={loading}
