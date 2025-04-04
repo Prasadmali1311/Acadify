@@ -213,4 +213,14 @@
 
 .logout-button:hover {
   background-color: #fee2e2;
+}
+
+.avatar.profile-photo {
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+.profile-avatar.profile-photo {
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
 } 
