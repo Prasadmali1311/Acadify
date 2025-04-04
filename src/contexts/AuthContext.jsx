@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
@@ -9,26 +9,32 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
-import { AuthContext } from './auth';
+
+const AuthContext = createContext();
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
 
   async function signup(email, password, role = 'student') {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Create user document in Firestore
+    // Create user document in Firestore with basic info
+    // Additional user info will be updated separately
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
       role: role,
       createdAt: new Date().toISOString()
     });
 
-    return user;
+    return userCredential;
   }
 
   async function login(email, password) {
@@ -61,19 +67,6 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   }
 
-  async function getUserProfile(uid) {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        return userDoc.data();
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-  }
-
   async function getUserRole(uid) {
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
@@ -87,18 +80,29 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function getUserProfile(uid) {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        return userDoc.data();
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  }
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const role = await getUserRole(user.uid);
         const profile = await getUserProfile(user.uid);
         setUserRole(role);
-        setUserProfile(profile);
         setCurrentUser({ ...user, role, profile });
       } else {
         setCurrentUser(null);
         setUserRole(null);
-        setUserProfile(null);
       }
       setLoading(false);
     });
@@ -109,7 +113,6 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     userRole,
-    userProfile,
     signup,
     login,
     loginWithGoogle,
