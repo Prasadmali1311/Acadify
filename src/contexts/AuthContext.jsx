@@ -22,14 +22,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
 
-  async function signup(email, password, role = 'student') {
+  async function signup(email, password, role = 'student', userInfo = {}) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Create user document in Firestore with basic info
-    // Additional user info will be updated separately
+    // Create user document in Firestore with all user info
     await setDoc(doc(db, 'users', user.uid), {
       email: user.email,
+      firstName: userInfo.firstName || '',
+      lastName: userInfo.lastName || '',
+      mobileNumber: userInfo.mobileNumber || '',
       role: role,
       createdAt: new Date().toISOString()
     });
