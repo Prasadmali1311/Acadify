@@ -1,0 +1,113 @@
+/* TeacherAssignments.css */
+
+/* Assignment List Styles for Teachers */
+.assignment-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.assignment-list-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.assignment-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+  align-items: center;
+}
+
+.assignment-item:hover {
+  background-color: #f9fafb;
+}
+
+.assignment-title {
+  font-weight: 500;
+  color: #111827;
+}
+
+.assignment-class, .assignment-date, .assignment-deadline {
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.assignment-submissions {
+  color: #4b5563;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.assignment-status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  max-width: fit-content;
+}
+
+.assignment-status-badge.active {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.assignment-status-badge.draft {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.assignment-status-badge.graded {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.assignment-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.action-button.publish {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.action-button.grade {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.action-button.edit {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .assignment-list-header, .assignment-item {
+    grid-template-columns: 2fr 1fr 1fr;
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .assignment-date, .assignment-deadline, .assignment-status, .assignment-submissions {
+    display: none;
+  }
+  
+  .assignment-list-header div:nth-child(1),
+  .assignment-list-header div:nth-child(2),
+  .assignment-list-header div:nth-child(7),
+  .assignment-item div:nth-child(1),
+  .assignment-item div:nth-child(2),
+  .assignment-item div:nth-child(7) {
+    display: block;
+  }
+} 

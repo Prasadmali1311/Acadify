@@ -8,7 +8,7 @@ const RoleBasedAssignments = () => {
 
   // If user is not authenticated, redirect to login
   if (!currentUser) {
-    return <Navigate to="/login" />;
+    return <Navigate to="login" />;
   }
 
   // Get user role from profile

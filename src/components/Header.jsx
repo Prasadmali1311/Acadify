@@ -26,7 +26,7 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate('login');
     } catch (error) {
       console.error('Failed to log out:', error);
     }
@@ -150,10 +150,16 @@ const Header = () => {
                 </div>
               </div>
               <div className="profile-menu-items">
-                <button className="profile-menu-item">
+                <button className="profile-menu-item" onClick={() => {
+                  navigate('profile');
+                  setIsProfileMenuOpen(false);
+                }}>
                   <span>Profile</span>
                 </button>
-                <button className="profile-menu-item">
+                <button className="profile-menu-item" onClick={() => {
+                  navigate('settings');
+                  setIsProfileMenuOpen(false);
+                }}>
                   <span>Settings</span>
                 </button>
                 <button className="profile-menu-item logout-button" onClick={handleLogout}>

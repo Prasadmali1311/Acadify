@@ -8,7 +8,7 @@ const RoleBasedDashboard = () => {
 
   // If user is not authenticated, redirect to login
   if (!currentUser) {
-    return <Navigate to="/login" />;
+    return <Navigate to="login" />;
   }
 
   // Get user role from profile
@@ -21,7 +21,7 @@ const RoleBasedDashboard = () => {
     case 'student':
       return <StudentDashboard />;
     default:
-      return <Navigate to="/login" />;
+      return <Navigate to="login" />;
   }
 };
 

@@ -1,0 +1,106 @@
+/* Students.css */
+
+/* Students Page Styles */
+.student-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.student-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.student-list-header {
+  display: grid;
+  grid-template-columns: 2fr 2fr 2fr 1fr 1fr 2fr;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.student-item {
+  display: grid;
+  grid-template-columns: 2fr 2fr 2fr 1fr 1fr 2fr;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+  align-items: center;
+}
+
+.student-item:hover {
+  background-color: #f9fafb;
+}
+
+.student-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.student-email, .student-class {
+  color: #4b5563;
+}
+
+.student-performance {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.student-performance.excellent {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.student-performance.good {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.student-performance.average {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+
+.student-performance.below-average {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.student-attendance {
+  font-weight: 500;
+  text-align: center;
+}
+
+.student-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button.view {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.action-button.message {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .student-list-header, .student-item {
+    grid-template-columns: 1fr 1fr;
+    padding: 0.75rem;
+  }
+  
+  .student-class, .student-performance, .student-attendance {
+    display: none;
+  }
+} 
