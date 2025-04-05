@@ -718,4 +718,315 @@
   border-radius: 0.375rem;
   font-weight: 500;
   font-size: 0.875rem;
+}
+
+/* Assignment List Styles for Teachers */
+.assignment-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.assignment-list-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.assignment-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+  align-items: center;
+}
+
+.assignment-item:hover {
+  background-color: #f9fafb;
+}
+
+.assignment-title {
+  font-weight: 500;
+  color: #111827;
+}
+
+.assignment-class, .assignment-date, .assignment-deadline {
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.assignment-submissions {
+  color: #4b5563;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.assignment-status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  max-width: fit-content;
+}
+
+.assignment-status-badge.active {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.assignment-status-badge.draft {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.assignment-status-badge.graded {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.assignment-count {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.action-button.publish {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.action-button.grade {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.action-button.edit {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.action-button.submit {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+/* Assignment Cards for Students */
+.assignment-cards {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  margin-top: 1.5rem;
+}
+
+.assignment-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.assignment-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.assignment-card.pending {
+  border-left: 4px solid #2563eb;
+}
+
+.assignment-card.submitted {
+  border-left: 4px solid #f59e0b;
+}
+
+.assignment-card.graded {
+  border-left: 4px solid #10b981;
+}
+
+.assignment-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.assignment-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+}
+
+.assignment-card-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.assignment-card-status.pending {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.assignment-card-status.submitted {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.assignment-card-status.graded {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.assignment-card-class {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.assignment-card-instructor {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.assignment-card-description {
+  margin-bottom: 1.5rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+  flex-grow: 1;
+  line-height: 1.5;
+}
+
+.assignment-card-meta {
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.meta-label {
+  font-weight: 500;
+  color: #374151;
+  margin-right: 0.5rem;
+}
+
+.assignment-card-deadline, .assignment-card-grade {
+  margin-bottom: 0.5rem;
+}
+
+.assignment-card-days, .assignment-card-status-text {
+  margin-top: 0.5rem;
+}
+
+.days-left {
+  color: #1d4ed8;
+}
+
+.due-today {
+  color: #b45309;
+  font-weight: 500;
+}
+
+.overdue {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.grade {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: #15803d;
+}
+
+.assignment-card-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #4b5563;
+}
+
+.assignment-card-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.no-assignments {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  font-size: 1.125rem;
+}
+
+/* File Upload Styles */
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.file-input {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.file-upload-button {
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.file-upload-button:hover {
+  background-color: #e5e7eb;
+}
+
+.file-status {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .assignment-list-header, .assignment-item {
+    grid-template-columns: 2fr 1fr 1fr;
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .assignment-date, .assignment-deadline, .assignment-status, .assignment-submissions {
+    display: none;
+  }
+  
+  .assignment-list-header div:nth-child(1),
+  .assignment-list-header div:nth-child(2),
+  .assignment-list-header div:nth-child(7),
+  .assignment-item div:nth-child(1),
+  .assignment-item div:nth-child(2),
+  .assignment-item div:nth-child(7) {
+    display: block;
+  }
+  
+  .assignment-cards {
+    grid-template-columns: 1fr;
+  }
 } 

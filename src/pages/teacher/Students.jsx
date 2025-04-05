@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import './Dashboard.css';
+import '../Dashboard.css';
 
 const Students = () => {
-  const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
   

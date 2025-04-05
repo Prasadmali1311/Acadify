@@ -2,13 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Assignments from './pages/Assignments';
 import Reports from './pages/Reports';
-import Classes from './pages/Classes';
-import Students from './pages/Students';
-import Courses from './pages/Courses';
+import Classes from './pages/teacher/Classes';
+import Students from './pages/teacher/Students';
+import Courses from './pages/student/Courses';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
+import RoleBasedAssignments from './components/RoleBasedAssignments';
 import { useAuth } from './contexts/AuthContext';
 
 function App() {
@@ -29,7 +29,7 @@ function App() {
           </ProtectedRoute>
         }>
           <Route index element={<RoleBasedDashboard />} />
-          <Route path="assignments" element={<Assignments />} />
+          <Route path="assignments" element={<RoleBasedAssignments />} />
           <Route path="reports" element={<Reports />} />
           <Route path="classes" element={
             <ProtectedRoute allowedRoles={['teacher']}>
