@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import '../Dashboard.css';
+import './Students.css';
 
 const Students = () => {
   const [searchTerm, setSearchTerm] = useState('');

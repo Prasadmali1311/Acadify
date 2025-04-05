@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import '../Dashboard.css';
+import './Courses.css';
 
 const Courses = () => {
   const [activeTab, setActiveTab] = useState('enrolled');
