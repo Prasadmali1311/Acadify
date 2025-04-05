@@ -1,9 +1,9 @@
 import { useAuth } from '../contexts/AuthContext';
-import StudentDashboard from '../pages/student/StudentDashboard';
-import TeacherDashboard from '../pages/teacher/TeacherDashboard';
+import TeacherAssignments from '../pages/teacher/TeacherAssignments';
+import StudentAssignments from '../pages/student/StudentAssignments';
 import { Navigate } from 'react-router-dom';
 
-const RoleBasedDashboard = () => {
+const RoleBasedAssignments = () => {
   const { currentUser } = useAuth();
 
   // If user is not authenticated, redirect to login
@@ -14,15 +14,15 @@ const RoleBasedDashboard = () => {
   // Get user role from profile
   const userRole = currentUser.profile?.role || 'student';
 
-  // Render dashboard based on role
+  // Render assignments based on role
   switch (userRole.toLowerCase()) {
     case 'teacher':
-      return <TeacherDashboard />;
+      return <TeacherAssignments />;
     case 'student':
-      return <StudentDashboard />;
+      return <StudentAssignments />;
     default:
-      return <Navigate to="/login" />;
+      return <StudentAssignments />;
   }
 };
 
-export default RoleBasedDashboard; 
+export default RoleBasedAssignments; 

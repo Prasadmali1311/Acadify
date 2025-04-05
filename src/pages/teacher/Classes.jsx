@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import './Dashboard.css';
+import '../Dashboard.css';
 
 const Classes = () => {
-  const { currentUser } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [newClassName, setNewClassName] = useState('');
   const [newClassDescription, setNewClassDescription] = useState('');

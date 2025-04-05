@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import './Dashboard.css';
+import '../Dashboard.css';
 
 const Courses = () => {
-  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('enrolled');
   const [searchTerm, setSearchTerm] = useState('');
   
