@@ -1,15 +1,39 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { currentUser } = useAuth();
+  
+  // Get user role from profile
+  const userRole = currentUser?.profile?.role || 'student';
 
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: '📊' },
-    { path: '/assignments', label: 'Assignments', icon: '📝' },
-    { path: '/reports', label: 'Reports', icon: '📈' },
-  ];
+  // Define navigation items based on role
+  const getNavItems = () => {
+    const commonItems = [
+      { path: '/', label: 'Dashboard', icon: '📊' },
+      { path: '/assignments', label: 'Assignments', icon: '📝' },
+    ];
+
+    if (userRole === 'teacher') {
+      return [
+        ...commonItems,
+        { path: '/reports', label: 'Reports', icon: '📈' },
+        { path: '/classes', label: 'Classes', icon: '👥' },
+        { path: '/students', label: 'Students', icon: '🎓' },
+      ];
+    }
+
+    return [
+      ...commonItems,
+      { path: '/reports', label: 'Reports', icon: '📈' },
+      { path: '/courses', label: 'Courses', icon: '📚' },
+    ];
+  };
+
+  const navItems = getNavItems();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
