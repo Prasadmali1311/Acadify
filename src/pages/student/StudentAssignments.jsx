@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import '../Dashboard.css';
+import './StudentAssignments.css';
 
 const StudentAssignments = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');

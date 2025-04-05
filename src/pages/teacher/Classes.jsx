@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import '../Dashboard.css';
+import './Classes.css';
 
 const Classes = () => {
   const [showModal, setShowModal] = useState(false);

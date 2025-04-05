@@ -1,5 +1,5 @@
 import { useAuth } from '../../contexts/AuthContext';
-import '../Dashboard.css';
+import './StudentDashboard.css';
 
 const StudentDashboard = () => {
   const { currentUser } = useAuth();

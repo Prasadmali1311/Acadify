@@ -76,6 +76,20 @@
   color: #6b7280;
 }
 
+.assignment-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-button {
+  padding: 0.375rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
 .action-button.publish {
   background-color: #dbeafe;
   color: #1d4ed8;
@@ -86,9 +100,124 @@
   color: #15803d;
 }
 
+.action-button.view {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
 .action-button.edit {
   background-color: #f3f4f6;
   color: #4b5563;
+}
+
+.no-results {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 0.625rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  font-size: 0.875rem;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.cancel-button {
+  padding: 0.625rem 1rem;
+  background-color: white;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.submit-button {
+  padding: 0.625rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
 }
 
 /* Responsive adjustments for mobile */
@@ -110,4 +239,339 @@
   .assignment-item div:nth-child(7) {
     display: block;
   }
+}
+
+.dashboard-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+@media (min-width: 768px) {
+  .dashboard-container {
+    padding: 2rem;
+  }
+}
+
+.welcome-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .welcome-section {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.welcome-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.welcome-heading {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #111827;
+  letter-spacing: -0.025em;
+}
+
+.welcome-subtitle {
+  color: #4b5563;
+  font-size: 1.125rem;
+}
+
+.report-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  background-color: #2563eb;
+  color: white;
+  border-radius: 0.5rem;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.report-button:hover {
+  background-color: #1d4ed8;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.content-grid {
+  display: grid;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .content-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .content-card {
+    max-width: 100%;
+  }
+}
+
+.content-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid #f3f4f6;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.content-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.content-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.filters-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-container {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-select {
+  padding: 0.625rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  background-color: white;
+  width: 100%;
+}
+
+/* Teacher Assignment Cards */
+.assignment-cards {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  margin-top: 1.5rem;
+}
+
+.assignment-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.assignment-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.assignment-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.assignment-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+}
+
+.assignment-card-class {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.assignment-card-description {
+  margin-bottom: 1.5rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+  flex-grow: 1;
+  line-height: 1.5;
+}
+
+.assignment-card-meta {
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.meta-label {
+  font-weight: 500;
+  color: #374151;
+  margin-right: 0.5rem;
+}
+
+.assignment-card-deadline {
+  margin-bottom: 0.5rem;
+}
+
+.assignment-card-stats {
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.stats-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.stats-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.assignment-card-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.action-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.action-button.view {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.action-button.edit {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.action-button.delete {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.no-assignments {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  font-size: 1.125rem;
+}
+
+/* Delete Confirmation Modal */
+.delete-modal-body {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.delete-modal-text {
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  color: #4b5563;
+}
+
+.delete-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.delete-button {
+  padding: 0.625rem 1rem;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .assignment-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .assignment-card-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .assignment-card-stats {
+    justify-content: space-around;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .action-buttons {
+    margin-top: 0;
+  }
+}
+
+.create-button {
+  padding: 0.625rem 1.25rem;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
 } 
