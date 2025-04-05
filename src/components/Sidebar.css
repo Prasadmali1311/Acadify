@@ -10,6 +10,8 @@
   transition: left 0.3s ease;
   z-index: 50;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Show sidebar on tablet and desktop */
@@ -94,6 +96,12 @@
 
 .nav-menu {
   padding: 1rem 0;
+}
+
+.nav-footer {
+  margin-top: auto;
+  padding: 1rem 0;
+  border-top: 1px solid #f3f4f6;
 }
 
 .nav-link {

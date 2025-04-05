@@ -14,26 +14,36 @@ const Sidebar = () => {
   const getNavItems = () => {
     const commonItems = [
       { path: '/', label: 'Dashboard', icon: '📊' },
-      { path: '/assignments', label: 'Assignments', icon: '📝' },
+      { path: 'assignments', label: 'Assignments', icon: '📝' },
+    ];
+
+    const commonFooterItems = [
+      { path: 'settings', label: 'Settings', icon: '⚙️' },
     ];
 
     if (userRole === 'teacher') {
-      return [
-        ...commonItems,
-        { path: '/reports', label: 'Reports', icon: '📈' },
-        { path: '/classes', label: 'Classes', icon: '👥' },
-        { path: '/students', label: 'Students', icon: '🎓' },
-      ];
+      return {
+        mainItems: [
+          ...commonItems,
+          { path: 'reports', label: 'Reports', icon: '📈' },
+          { path: 'classes', label: 'Classes', icon: '👥' },
+          { path: 'students', label: 'Students', icon: '🎓' },
+        ],
+        footerItems: commonFooterItems
+      };
     }
 
-    return [
-      ...commonItems,
-      { path: '/reports', label: 'Reports', icon: '📈' },
-      { path: '/courses', label: 'Courses', icon: '📚' },
-    ];
+    return {
+      mainItems: [
+        ...commonItems,
+        { path: 'reports', label: 'Reports', icon: '📈' },
+        { path: 'courses', label: 'Courses', icon: '📚' },
+      ],
+      footerItems: commonFooterItems
+    };
   };
 
-  const navItems = getNavItems();
+  const { mainItems, footerItems } = getNavItems();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -58,7 +68,7 @@ const Sidebar = () => {
           <h1 className="logo">Acadify</h1>
         </div>
         <nav className="nav-menu">
-          {navItems.map((item) => (
+          {mainItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -72,6 +82,22 @@ const Sidebar = () => {
             </NavLink>
           ))}
         </nav>
+        
+        <div className="nav-footer">
+          {footerItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-link ${isActive ? 'active' : ''}`
+              }
+              onClick={() => setIsOpen(false)}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
       </div>
     </>
   );
