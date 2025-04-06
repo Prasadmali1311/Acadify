@@ -28,9 +28,9 @@ const StudentDashboard = () => {
   };
   
   const activities = [
-    { id: 1, title: 'Math Assignment submitted', time: '2 hours ago', status: 'completed' },
-    { id: 2, title: 'Physics Quiz due soon', time: '1 day left', status: 'pending' },
-    { id: 3, title: 'Chemistry Report graded', time: '3 hours ago', status: 'completed' }
+    { id: 1, title: 'React Component Assignment submitted', time: '2 hours ago', status: 'completed' },
+    { id: 2, title: 'JavaScript Quiz due soon', time: '1 day left', status: 'pending' },
+    { id: 3, title: 'CSS Grid Layout Project graded', time: '3 hours ago', status: 'completed' }
   ];
 
   return (
@@ -113,7 +113,7 @@ const StudentDashboard = () => {
             <div className="deadline-item high-priority">
               <div className="flex">
                 <div>
-                  <h4 className="font-medium text-blue-900">Final Project</h4>
+                  <h4 className="font-medium text-blue-900">Node.js API Project</h4>
                   <p className="text-sm text-blue-700">Due in 5 days</p>
                 </div>
                 <span className="priority-badge high">High Priority</span>
@@ -122,7 +122,7 @@ const StudentDashboard = () => {
             <div className="deadline-item medium-priority">
               <div className="flex">
                 <div>
-                  <h4 className="font-medium text-purple-900">Literature Review</h4>
+                  <h4 className="font-medium text-purple-900">React State Management Exercise</h4>
                   <p className="text-sm text-purple-700">Due in 1 week</p>
                 </div>
                 <span className="priority-badge medium">Medium Priority</span>

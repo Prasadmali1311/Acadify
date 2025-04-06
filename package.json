@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve": "vite preview --port 4173 --host",
+    "firebase:login": "firebase login",
+    "firebase:init": "firebase init",
+    "deploy": "npm run build && firebase deploy",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting"
   },
   "dependencies": {
     "@firebase/auth": "^1.9.1",

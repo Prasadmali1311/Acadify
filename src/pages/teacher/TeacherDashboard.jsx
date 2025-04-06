@@ -28,9 +28,9 @@ const TeacherDashboard = () => {
   };
   
   const activities = [
-    { id: 1, title: 'Math Assignment graded', time: '2 hours ago', status: 'completed' },
-    { id: 2, title: 'Physics Quiz created', time: '1 day ago', status: 'completed' },
-    { id: 3, title: 'Chemistry Report submitted for review', time: '3 hours ago', status: 'pending' }
+    { id: 1, title: 'HTML & CSS Projects graded', time: '2 hours ago', status: 'completed' },
+    { id: 2, title: 'JavaScript Quiz created', time: '1 day ago', status: 'completed' },
+    { id: 3, title: 'React Components submitted for review', time: '3 hours ago', status: 'pending' }
   ];
 
   return (
@@ -113,7 +113,7 @@ const TeacherDashboard = () => {
             <div className="deadline-item high-priority">
               <div className="flex">
                 <div>
-                  <h4 className="font-medium text-blue-900">Grade Final Projects</h4>
+                  <h4 className="font-medium text-blue-900">Grade React Projects</h4>
                   <p className="text-sm text-blue-700">Due in 3 days</p>
                 </div>
                 <span className="priority-badge high">High Priority</span>
@@ -122,7 +122,7 @@ const TeacherDashboard = () => {
             <div className="deadline-item medium-priority">
               <div className="flex">
                 <div>
-                  <h4 className="font-medium text-purple-900">Prepare Midterm Exam</h4>
+                  <h4 className="font-medium text-purple-900">Prepare JavaScript Assessment</h4>
                   <p className="text-sm text-purple-700">Due in 1 week</p>
                 </div>
                 <span className="priority-badge medium">Medium Priority</span>
