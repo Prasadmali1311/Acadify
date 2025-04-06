@@ -1,35 +1,90 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { getInstructorCourses, createCourse } from '../../firebase/firestoreService';
 import './Classes.css';
 
 const Classes = () => {
   const [showModal, setShowModal] = useState(false);
   const [newClassName, setNewClassName] = useState('');
   const [newClassDescription, setNewClassDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // Sample class data (would come from your database in a real app)
-  const [classes, setClasses] = useState([
-    { id: 1, name: 'HTML & CSS Fundamentals', students: 32, description: 'Core concepts of modern web design and styling', nextClass: 'Monday, 10:00 AM' },
-    { id: 2, name: 'JavaScript Essentials', students: 28, description: 'Programming fundamentals with JavaScript', nextClass: 'Wednesday, 2:00 PM' },
-    { id: 3, name: 'React Framework', students: 24, description: 'Building dynamic UIs with React', nextClass: 'Thursday, 11:30 AM' },
-    { id: 4, name: 'Backend Development with Node.js', students: 18, description: 'Server-side JavaScript and API development', nextClass: 'Tuesday, 9:00 AM' },
-  ]);
+  // Get current user from AuthContext
+  const { currentUser } = useAuth();
+  
+  // State for courses
+  const [classes, setClasses] = useState([]);
 
-  const handleCreateClass = (e) => {
+  // Fetch classes from Firestore
+  useEffect(() => {
+    async function fetchClasses() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const fetchedCourses = await getInstructorCourses(currentUser.uid);
+        
+        // Transform data to match our UI format
+        const formattedCourses = fetchedCourses.map(course => ({
+          id: course.id,
+          name: course.name,
+          description: course.description,
+          students: 0, // You might want to calculate this from enrollments
+          nextClass: course.nextClass || 'Not scheduled yet'
+        }));
+        
+        setClasses(formattedCourses);
+      } catch (err) {
+        console.error('Error fetching classes:', err);
+        setError('Failed to load classes. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    if (currentUser) {
+      fetchClasses();
+    }
+  }, [currentUser]);
+
+  const handleCreateClass = async (e) => {
     e.preventDefault();
     if (!newClassName) return;
     
-    const newClass = {
-      id: classes.length + 1,
-      name: newClassName,
-      description: newClassDescription,
-      students: 0,
-      nextClass: 'Not scheduled yet'
-    };
-    
-    setClasses([...classes, newClass]);
-    setNewClassName('');
-    setNewClassDescription('');
-    setShowModal(false);
+    try {
+      setIsLoading(true);
+      
+      const newCourseData = {
+        name: newClassName,
+        description: newClassDescription,
+        instructorId: currentUser.uid,
+        instructorName: `${currentUser.profile?.firstName || ''} ${currentUser.profile?.lastName || ''}`.trim() || 'Teacher',
+        level: 'Beginner',
+        duration: '10 weeks',
+        status: 'active'
+      };
+      
+      const createdCourse = await createCourse(newCourseData);
+      
+      // Add the new course to the state
+      setClasses([...classes, {
+        id: createdCourse.id,
+        name: createdCourse.name,
+        description: createdCourse.description,
+        students: 0,
+        nextClass: 'Not scheduled yet'
+      }]);
+      
+      setNewClassName('');
+      setNewClassDescription('');
+      setShowModal(false);
+    } catch (err) {
+      console.error('Error creating class:', err);
+      setError('Failed to create class. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -50,22 +105,49 @@ const Classes = () => {
           <div className="card-header">
             <h2 className="card-title">All Classes</h2>
           </div>
-          <div className="class-list">
-            <div className="class-list-header">
-              <div className="class-name">Class Name</div>
-              <div className="class-students">Students</div>
-              <div className="class-description">Description</div>
-              <div className="class-next">Next Session</div>
+          
+          {isLoading && (
+            <div className="loading-state">
+              <p>Loading classes...</p>
             </div>
-            {classes.map((classItem) => (
-              <div key={classItem.id} className="class-item">
-                <div className="class-name">{classItem.name}</div>
-                <div className="class-students">{classItem.students} students</div>
-                <div className="class-description">{classItem.description}</div>
-                <div className="class-next">{classItem.nextClass}</div>
-              </div>
-            ))}
-          </div>
+          )}
+          
+          {error && (
+            <div className="error-state">
+              <p>{error}</p>
+              <button onClick={() => window.location.reload()}>Retry</button>
+            </div>
+          )}
+          
+          {!isLoading && !error && (
+            <>
+              {classes.length === 0 ? (
+                <div className="empty-state">
+                  <p>You haven't created any classes yet.</p>
+                  <button className="create-first-class" onClick={() => setShowModal(true)}>
+                    Create Your First Class
+                  </button>
+                </div>
+              ) : (
+                <div className="class-list">
+                  <div className="class-list-header">
+                    <div className="class-name">Class Name</div>
+                    <div className="class-students">Students</div>
+                    <div className="class-description">Description</div>
+                    <div className="class-next">Next Session</div>
+                  </div>
+                  {classes.map((classItem) => (
+                    <div key={classItem.id} className="class-item">
+                      <div className="class-name">{classItem.name}</div>
+                      <div className="class-students">{classItem.students} students</div>
+                      <div className="class-description">{classItem.description}</div>
+                      <div className="class-next">{classItem.nextClass}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -101,8 +183,8 @@ const Classes = () => {
                 <button type="button" className="cancel-button" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="submit-button">
-                  Create Class
+                <button type="submit" className="submit-button" disabled={isLoading}>
+                  {isLoading ? 'Creating...' : 'Create Class'}
                 </button>
               </div>
             </form>

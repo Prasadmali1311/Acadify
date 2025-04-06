@@ -1,29 +1,85 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { getTeacherStudents, getInstructorCourses } from '../../firebase/firestoreService';
 import './Students.css';
 
 const Students = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // Sample student data (would come from your database in a real app)
-  const students = [
-    { id: 1, name: 'John Smith', email: 'john.smith@example.com', class: 'HTML & CSS Fundamentals', performance: 'Excellent', attendance: '95%' },
-    { id: 2, name: 'Sarah Johnson', email: 'sarah.j@example.com', class: 'JavaScript Essentials', performance: 'Good', attendance: '87%' },
-    { id: 3, name: 'Michael Brown', email: 'michael.b@example.com', class: 'React Framework', performance: 'Average', attendance: '78%' },
-    { id: 4, name: 'Emma Wilson', email: 'emma.w@example.com', class: 'HTML & CSS Fundamentals', performance: 'Excellent', attendance: '98%' },
-    { id: 5, name: 'David Lee', email: 'david.l@example.com', class: 'Backend Development with Node.js', performance: 'Good', attendance: '92%' },
-    { id: 6, name: 'Jessica Chen', email: 'jessica.c@example.com', class: 'JavaScript Essentials', performance: 'Excellent', attendance: '97%' },
-    { id: 7, name: 'Thomas Rodriguez', email: 'thomas.r@example.com', class: 'Backend Development with Node.js', performance: 'Below Average', attendance: '65%' },
-    { id: 8, name: 'Olivia Martin', email: 'olivia.m@example.com', class: 'React Framework', performance: 'Good', attendance: '85%' },
-  ];
+  // Get current user
+  const { currentUser } = useAuth();
   
-  // Sample class data for filtering
-  const classes = [
-    { id: 1, name: 'HTML & CSS Fundamentals' },
-    { id: 2, name: 'JavaScript Essentials' },
-    { id: 3, name: 'React Framework' },
-    { id: 4, name: 'Backend Development with Node.js' },
-  ];
+  // State for students and classes
+  const [students, setStudents] = useState([]);
+  const [classes, setClasses] = useState([]);
+
+  // Fetch teacher's students and courses
+  useEffect(() => {
+    async function fetchData() {
+      if (!currentUser) return;
+      
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch courses
+        const fetchedCourses = await getInstructorCourses(currentUser.uid);
+        
+        // Format courses for the dropdown
+        const formattedCourses = fetchedCourses.map(course => ({
+          id: course.id,
+          name: course.name
+        }));
+        
+        setClasses(formattedCourses);
+        
+        // Fetch students
+        const fetchedStudents = await getTeacherStudents(currentUser.uid);
+        
+        // Format students for UI
+        const formattedStudents = fetchedStudents.map(student => {
+          // Assign random data for the demo
+          const randomPerformance = Math.random();
+          let performance;
+          if (randomPerformance > 0.75) {
+            performance = 'Excellent';
+          } else if (randomPerformance > 0.5) {
+            performance = 'Good';
+          } else if (randomPerformance > 0.25) {
+            performance = 'Average';
+          } else {
+            performance = 'Below Average';
+          }
+          
+          const attendance = Math.floor(Math.random() * 30) + 70 + '%';
+          
+          // Randomly assign a course for filtering
+          const randomClass = formattedCourses[Math.floor(Math.random() * formattedCourses.length)]?.name || 'Unknown';
+          
+          return {
+            id: student.id,
+            name: `${student.firstName || ''} ${student.lastName || ''}`.trim(),
+            email: student.email || 'No email',
+            class: randomClass,
+            performance,
+            attendance
+          };
+        });
+        
+        setStudents(formattedStudents);
+      } catch (err) {
+        console.error('Error fetching teacher data:', err);
+        setError('Failed to load data. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchData();
+  }, [currentUser]);
 
   // Filter students based on search term and selected class
   const filteredStudents = students.filter(student => {
@@ -75,35 +131,47 @@ const Students = () => {
             <h2 className="card-title">Student List</h2>
             <div className="student-count">{filteredStudents.length} students</div>
           </div>
-          <div className="student-list">
-            <div className="student-list-header">
-              <div className="student-name">Name</div>
-              <div className="student-email">Email</div>
-              <div className="student-class">Class</div>
-              <div className="student-performance">Performance</div>
-              <div className="student-attendance">Attendance</div>
-              <div className="student-actions">Actions</div>
+          
+          {isLoading ? (
+            <div className="loading-state">
+              <p>Loading students...</p>
             </div>
-            {filteredStudents.length > 0 ? (
-              filteredStudents.map((student) => (
-                <div key={student.id} className="student-item">
-                  <div className="student-name">{student.name}</div>
-                  <div className="student-email">{student.email}</div>
-                  <div className="student-class">{student.class}</div>
-                  <div className={`student-performance ${student.performance.toLowerCase().replace(' ', '-')}`}>
-                    {student.performance}
+          ) : error ? (
+            <div className="error-state">
+              <p>{error}</p>
+              <button onClick={() => window.location.reload()}>Retry</button>
+            </div>
+          ) : (
+            <div className="student-list">
+              <div className="student-list-header">
+                <div className="student-name">Name</div>
+                <div className="student-email">Email</div>
+                <div className="student-class">Class</div>
+                <div className="student-performance">Performance</div>
+                <div className="student-attendance">Attendance</div>
+                <div className="student-actions">Actions</div>
+              </div>
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((student) => (
+                  <div key={student.id} className="student-item">
+                    <div className="student-name">{student.name}</div>
+                    <div className="student-email">{student.email}</div>
+                    <div className="student-class">{student.class}</div>
+                    <div className={`student-performance ${student.performance.toLowerCase().replace(' ', '-')}`}>
+                      {student.performance}
+                    </div>
+                    <div className="student-attendance">{student.attendance}</div>
+                    <div className="student-actions">
+                      <button className="action-button view">View Profile</button>
+                      <button className="action-button message">Message</button>
+                    </div>
                   </div>
-                  <div className="student-attendance">{student.attendance}</div>
-                  <div className="student-actions">
-                    <button className="action-button view">View Profile</button>
-                    <button className="action-button message">Message</button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="no-results">No students match your search criteria</div>
-            )}
-          </div>
+                ))
+              ) : (
+                <div className="no-results">No students match your search criteria</div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
