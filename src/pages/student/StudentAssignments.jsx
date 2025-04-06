@@ -52,8 +52,11 @@ const StudentAssignments = () => {
       
       setClasses(formattedCourses);
       
-      // Fetch assignments
-      const fetchedAssignments = await getStudentAssignments(currentUser.uid);
+      // Fetch assignments - use forceRefresh to bust cache if needed
+      const fetchedAssignments = await getStudentAssignments(
+        currentUser.uid, 
+        forceRefresh ? new Date().getTime() : undefined
+      );
       
       // Format assignments for display
       const formattedAssignments = fetchedAssignments.map(assignment => ({
@@ -94,6 +97,7 @@ const StudentAssignments = () => {
     if (currentUser?.uid) {
       fetchData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   // Calculate days left or overdue
@@ -143,7 +147,7 @@ const StudentAssignments = () => {
       };
       
       // Submit to Firestore
-      const result = await submitAssignment(submissionData);
+      await submitAssignment(submissionData);
       
       // Reset form and close modal
       setSubmissionText('');

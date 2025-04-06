@@ -122,6 +122,7 @@ const TeacherAssignments = () => {
     if (currentUser?.uid) {
       fetchData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   // Handler for creating a new assignment
