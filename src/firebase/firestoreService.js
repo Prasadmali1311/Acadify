@@ -2,7 +2,7 @@ import {
   collection, 
   doc, 
   addDoc, 
-  setDoc, 
+  // setDoc, 
   getDoc, 
   getDocs, 
   updateDoc, 
@@ -348,10 +348,12 @@ export const getTeacherAssignments = async (teacherId) => {
 };
 
 // Get all assignments for a student
-export const getStudentAssignments = async (studentId) => {
+export const getStudentAssignments = async (studentId, timestamp) => {
   try {
-    console.log("%c getStudentAssignments CALLED:", "font-size: 14px; color: blue; font-weight: bold;");
-    console.log("Student ID:", studentId);
+    console.log("Getting student assignments for:", studentId);
+    if (timestamp) {
+      console.log("Using cache buster timestamp:", timestamp);
+    }
     
     if (!studentId) {
       console.error("Error: No studentId provided to getStudentAssignments");
