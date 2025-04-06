@@ -7,17 +7,17 @@ const Courses = () => {
   
   // Sample enrolled courses data
   const enrolledCourses = [
-    { id: 1, name: 'Mathematics 101', instructor: 'Dr. Alan Johnson', progress: 75, nextClass: 'Monday, 10:00 AM', assignments: 2 },
-    { id: 2, name: 'Physics for Beginners', instructor: 'Prof. Maria Garcia', progress: 60, nextClass: 'Wednesday, 2:00 PM', assignments: 1 },
-    { id: 3, name: 'Introduction to Literature', instructor: 'Dr. Emily Wilson', progress: 90, nextClass: 'Friday, 11:00 AM', assignments: 0 },
+    { id: 1, name: 'HTML & CSS Fundamentals', instructor: 'Dr. Emma Richards', progress: 75, nextClass: 'Monday, 10:00 AM', assignments: 2 },
+    { id: 2, name: 'JavaScript Essentials', instructor: 'Prof. David Chen', progress: 60, nextClass: 'Wednesday, 2:00 PM', assignments: 1 },
+    { id: 3, name: 'React Framework', instructor: 'Dr. Sarah Johnson', progress: 90, nextClass: 'Friday, 11:00 AM', assignments: 0 },
   ];
 
   // Sample available courses data
   const availableCourses = [
-    { id: 4, name: 'Chemistry Advanced', instructor: 'Dr. Robert Chen', enrolled: 24, duration: '12 weeks', level: 'Advanced' },
-    { id: 5, name: 'Computer Science Basics', instructor: 'Prof. James Smith', enrolled: 56, duration: '10 weeks', level: 'Beginner' },
-    { id: 6, name: 'Art History', instructor: 'Dr. Sophia Rodriguez', enrolled: 32, duration: '8 weeks', level: 'Intermediate' },
-    { id: 7, name: 'Business Economics', instructor: 'Prof. Michael Brown', enrolled: 45, duration: '14 weeks', level: 'Intermediate' },
+    { id: 4, name: 'Backend Development with Node.js', instructor: 'Dr. Michael Thompson', enrolled: 24, duration: '10 weeks', level: 'Intermediate' },
+    { id: 5, name: 'Advanced JavaScript Concepts', instructor: 'Prof. James Wilson', enrolled: 56, duration: '8 weeks', level: 'Advanced' },
+    { id: 6, name: 'UI/UX Design for Developers', instructor: 'Dr. Sophia Rodriguez', enrolled: 32, duration: '6 weeks', level: 'Intermediate' },
+    { id: 7, name: 'Full Stack Web Development', instructor: 'Prof. Alex Martinez', enrolled: 45, duration: '12 weeks', level: 'Advanced' },
   ];
 
   // Filter courses based on search term

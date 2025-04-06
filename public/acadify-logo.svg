@@ -1,0 +1,12 @@
+<svg width="400" height="400" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Graduation Cap -->
+  <path d="M100 40L170 70L100 100L30 70L100 40Z" fill="#fff"/>
+  <path d="M100 100V130" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="100" cy="130" r="5" fill="#fff"/>
+
+  <!-- Open Book -->
+  <path d="M60 140C60 130 90 130 100 140C110 130 140 130 140 140V160C130 150 110 150 100 160C90 150 70 150 60 160V140Z" fill="#fff"/>
+
+  <!-- Text "Acadify" -->
+  <text x="50%" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="60" fill="#fff">Acadify</text>
+</svg>

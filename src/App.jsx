@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Reports from './pages/Reports';
+// import Reports from './pages/Reports'; // Removed as this component was deleted
 import Classes from './pages/teacher/Classes';
 import Students from './pages/teacher/Students';
 import Courses from './pages/student/Courses';
@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
 import RoleBasedAssignments from './components/RoleBasedAssignments';
+import RoleBasedReports from './components/RoleBasedReports';
 import { useAuth } from './contexts/AuthContext';
 
 function App() {
@@ -37,7 +38,7 @@ function App() {
         >
           <Route index element={<RoleBasedDashboard />} />
           <Route path="assignments" element={<RoleBasedAssignments />} />
-          <Route path="reports" element={<Reports />} />
+          <Route path="reports" element={<RoleBasedReports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="profile" element={<Profile />} />
           <Route 
