@@ -7,22 +7,22 @@ const Students = () => {
   
   // Sample student data (would come from your database in a real app)
   const students = [
-    { id: 1, name: 'John Smith', email: 'john.smith@example.com', class: 'Mathematics 101', performance: 'Excellent', attendance: '95%' },
-    { id: 2, name: 'Sarah Johnson', email: 'sarah.j@example.com', class: 'Physics for Beginners', performance: 'Good', attendance: '87%' },
-    { id: 3, name: 'Michael Brown', email: 'michael.b@example.com', class: 'Chemistry Advanced', performance: 'Average', attendance: '78%' },
-    { id: 4, name: 'Emma Wilson', email: 'emma.w@example.com', class: 'Mathematics 101', performance: 'Excellent', attendance: '98%' },
-    { id: 5, name: 'David Lee', email: 'david.l@example.com', class: 'Computer Science Basics', performance: 'Good', attendance: '92%' },
-    { id: 6, name: 'Jessica Chen', email: 'jessica.c@example.com', class: 'Physics for Beginners', performance: 'Excellent', attendance: '97%' },
-    { id: 7, name: 'Thomas Rodriguez', email: 'thomas.r@example.com', class: 'Computer Science Basics', performance: 'Below Average', attendance: '65%' },
-    { id: 8, name: 'Olivia Martin', email: 'olivia.m@example.com', class: 'Chemistry Advanced', performance: 'Good', attendance: '85%' },
+    { id: 1, name: 'John Smith', email: 'john.smith@example.com', class: 'HTML & CSS Fundamentals', performance: 'Excellent', attendance: '95%' },
+    { id: 2, name: 'Sarah Johnson', email: 'sarah.j@example.com', class: 'JavaScript Essentials', performance: 'Good', attendance: '87%' },
+    { id: 3, name: 'Michael Brown', email: 'michael.b@example.com', class: 'React Framework', performance: 'Average', attendance: '78%' },
+    { id: 4, name: 'Emma Wilson', email: 'emma.w@example.com', class: 'HTML & CSS Fundamentals', performance: 'Excellent', attendance: '98%' },
+    { id: 5, name: 'David Lee', email: 'david.l@example.com', class: 'Backend Development with Node.js', performance: 'Good', attendance: '92%' },
+    { id: 6, name: 'Jessica Chen', email: 'jessica.c@example.com', class: 'JavaScript Essentials', performance: 'Excellent', attendance: '97%' },
+    { id: 7, name: 'Thomas Rodriguez', email: 'thomas.r@example.com', class: 'Backend Development with Node.js', performance: 'Below Average', attendance: '65%' },
+    { id: 8, name: 'Olivia Martin', email: 'olivia.m@example.com', class: 'React Framework', performance: 'Good', attendance: '85%' },
   ];
   
   // Sample class data for filtering
   const classes = [
-    { id: 1, name: 'Mathematics 101' },
-    { id: 2, name: 'Physics for Beginners' },
-    { id: 3, name: 'Chemistry Advanced' },
-    { id: 4, name: 'Computer Science Basics' },
+    { id: 1, name: 'HTML & CSS Fundamentals' },
+    { id: 2, name: 'JavaScript Essentials' },
+    { id: 3, name: 'React Framework' },
+    { id: 4, name: 'Backend Development with Node.js' },
   ];
 
   // Filter students based on search term and selected class

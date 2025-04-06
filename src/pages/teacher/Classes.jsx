@@ -8,10 +8,10 @@ const Classes = () => {
   
   // Sample class data (would come from your database in a real app)
   const [classes, setClasses] = useState([
-    { id: 1, name: 'Mathematics 101', students: 32, description: 'Introduction to calculus and algebra', nextClass: 'Monday, 10:00 AM' },
-    { id: 2, name: 'Physics for Beginners', students: 28, description: 'Fundamental concepts of physics', nextClass: 'Wednesday, 2:00 PM' },
-    { id: 3, name: 'Chemistry Advanced', students: 15, description: 'Advanced organic chemistry concepts', nextClass: 'Thursday, 11:30 AM' },
-    { id: 4, name: 'Computer Science Basics', students: 24, description: 'Programming fundamentals and algorithms', nextClass: 'Tuesday, 9:00 AM' },
+    { id: 1, name: 'HTML & CSS Fundamentals', students: 32, description: 'Core concepts of modern web design and styling', nextClass: 'Monday, 10:00 AM' },
+    { id: 2, name: 'JavaScript Essentials', students: 28, description: 'Programming fundamentals with JavaScript', nextClass: 'Wednesday, 2:00 PM' },
+    { id: 3, name: 'React Framework', students: 24, description: 'Building dynamic UIs with React', nextClass: 'Thursday, 11:30 AM' },
+    { id: 4, name: 'Backend Development with Node.js', students: 18, description: 'Server-side JavaScript and API development', nextClass: 'Tuesday, 9:00 AM' },
   ]);
 
   const handleCreateClass = (e) => {

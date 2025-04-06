@@ -13,83 +13,82 @@ const StudentAssignments = () => {
   const assignments = [
     { 
       id: 1, 
-      title: 'Final Exam Questions', 
-      class: 'Mathematics 101', 
-      instructor: 'Dr. Alan Johnson',
+      title: 'Responsive Portfolio Website', 
+      class: 'HTML & CSS Fundamentals', 
+      instructor: 'Dr. Emma Richards',
       deadline: '2025-04-15', 
       status: 'pending',
-      description: 'Answer all questions in the attached PDF. Make sure to show all your work.',
+      description: 'Create a responsive portfolio website using HTML5 and CSS3. Implement mobile-first design principles.',
       graded: false
     },
     { 
       id: 2, 
-      title: 'Physics Lab Report', 
-      class: 'Physics for Beginners', 
-      instructor: 'Prof. Maria Garcia',
+      title: 'Interactive Quiz App', 
+      class: 'JavaScript Essentials', 
+      instructor: 'Prof. David Chen',
       deadline: '2025-04-05', 
       status: 'pending',
-      description: 'Document your findings from the spring experiment. Include all measurements and calculations.',
+      description: 'Build an interactive quiz application with JavaScript. Include timer, scoring, and result feedback.',
       graded: false
     },
     { 
       id: 3, 
-      title: 'Midterm Exam', 
-      class: 'Mathematics 101', 
-      instructor: 'Dr. Alan Johnson',
+      title: 'CSS Grid Layout Challenge', 
+      class: 'HTML & CSS Fundamentals', 
+      instructor: 'Dr. Emma Richards',
       deadline: '2025-03-01', 
       status: 'submitted',
       submittedDate: '2025-02-28',
-      description: 'Complete all problems in sections A, B, and C.',
+      description: 'Design a complex webpage layout using CSS Grid. Include responsive breakpoints.',
       graded: false
     },
     { 
       id: 4, 
-      title: 'Programming Exercise', 
-      class: 'Computer Science Basics', 
-      instructor: 'Prof. James Smith',
+      title: 'API Integration Project', 
+      class: 'Backend Development with Node.js', 
+      instructor: 'Dr. Michael Thompson',
       deadline: '2025-03-15', 
       status: 'submitted',
       submittedDate: '2025-03-14',
-      description: 'Implement a sorting algorithm of your choice and analyze its time complexity.',
+      description: 'Develop a RESTful API with Node.js and Express. Implement CRUD operations and authentication.',
       graded: false
     },
     { 
       id: 5, 
-      title: 'Literature Analysis', 
-      class: 'Introduction to Literature', 
-      instructor: 'Dr. Emily Wilson',
+      title: 'Component Architecture Design', 
+      class: 'React Framework', 
+      instructor: 'Dr. Sarah Johnson',
       deadline: '2025-02-20', 
       status: 'graded',
       submittedDate: '2025-02-19',
       gradedDate: '2025-02-25',
       grade: 'A',
-      feedback: 'Excellent analysis of the themes and characters. Well structured and thoughtful.',
-      description: 'Analyze the main themes in "To Kill a Mockingbird" and how they relate to today\'s society.',
+      feedback: 'Excellent component structure and state management. Well-organized code with proper React patterns.',
+      description: 'Create a React application with reusable components. Implement proper state management and props.',
       graded: true
     },
     { 
       id: 6, 
-      title: 'Chemical Equations Quiz', 
-      class: 'Chemistry Advanced', 
-      instructor: 'Dr. Robert Chen',
+      title: 'State Management Project', 
+      class: 'JavaScript Essentials', 
+      instructor: 'Prof. David Chen',
       deadline: '2025-02-10', 
       status: 'graded',
       submittedDate: '2025-02-09',
       gradedDate: '2025-02-15',
       grade: 'B+',
-      feedback: 'Good work on balancing equations. Some minor errors in the complex reactions section.',
-      description: 'Balance the given chemical equations and identify reaction types.',
+      feedback: 'Good implementation of state management patterns. Some room for improvement in code organization.',
+      description: 'Implement different state management patterns in JavaScript. Compare and contrast approaches.',
       graded: true
     }
   ];
   
   // Sample class data for filtering
   const classes = [
-    { id: 1, name: 'Mathematics 101' },
-    { id: 2, name: 'Physics for Beginners' },
-    { id: 3, name: 'Chemistry Advanced' },
-    { id: 4, name: 'Computer Science Basics' },
-    { id: 5, name: 'Introduction to Literature' }
+    { id: 1, name: 'HTML & CSS Fundamentals' },
+    { id: 2, name: 'JavaScript Essentials' },
+    { id: 3, name: 'React Framework' },
+    { id: 4, name: 'Backend Development with Node.js' }
   ];
 
   // Calculate days left or overdue

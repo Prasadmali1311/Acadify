@@ -14,8 +14,8 @@ const TeacherAssignments = () => {
   const [assignments, setAssignments] = useState([
     { 
       id: 1, 
-      title: 'Final Exam Questions', 
-      class: 'Mathematics 101', 
+      title: 'Responsive Portfolio Website', 
+      class: 'HTML & CSS Fundamentals', 
       publishedDate: '2025-03-25', 
       deadline: '2025-04-15', 
       status: 'active',
@@ -24,8 +24,8 @@ const TeacherAssignments = () => {
     },
     { 
       id: 2, 
-      title: 'Physics Lab Report', 
-      class: 'Physics for Beginners', 
+      title: 'Interactive Quiz App', 
+      class: 'JavaScript Essentials', 
       publishedDate: '2025-03-20', 
       deadline: '2025-04-05', 
       status: 'active',
@@ -34,18 +34,18 @@ const TeacherAssignments = () => {
     },
     { 
       id: 3, 
-      title: 'Chemical Compounds Quiz', 
-      class: 'Chemistry Advanced', 
+      title: 'Component Architecture Design', 
+      class: 'React Framework', 
       publishedDate: '2025-03-10', 
       deadline: '2025-03-30', 
       status: 'active',
       submissions: 12,
-      totalStudents: 15
+      totalStudents: 24
     },
     { 
       id: 4, 
-      title: 'Midterm Exam', 
-      class: 'Mathematics 101', 
+      title: 'CSS Grid Layout Challenge', 
+      class: 'HTML & CSS Fundamentals', 
       publishedDate: '2025-02-15', 
       deadline: '2025-03-01', 
       status: 'graded',
@@ -54,18 +54,18 @@ const TeacherAssignments = () => {
     },
     { 
       id: 5, 
-      title: 'Programming Exercise', 
-      class: 'Computer Science Basics', 
+      title: 'RESTful API Implementation', 
+      class: 'Backend Development with Node.js', 
       publishedDate: '2025-03-01', 
       deadline: '2025-03-15', 
       status: 'graded',
-      submissions: 20,
-      totalStudents: 24
+      submissions: 18,
+      totalStudents: 18
     },
     { 
       id: 6, 
-      title: 'Draft Research Paper', 
-      class: 'Physics for Beginners', 
+      title: 'State Management Project', 
+      class: 'JavaScript Essentials', 
       publishedDate: '2025-02-20', 
       deadline: '2025-03-10', 
       status: 'draft',
@@ -76,10 +76,10 @@ const TeacherAssignments = () => {
   
   // Sample class data for filtering
   const classes = [
-    { id: 1, name: 'Mathematics 101' },
-    { id: 2, name: 'Physics for Beginners' },
-    { id: 3, name: 'Chemistry Advanced' },
-    { id: 4, name: 'Computer Science Basics' },
+    { id: 1, name: 'HTML & CSS Fundamentals' },
+    { id: 2, name: 'JavaScript Essentials' },
+    { id: 3, name: 'React Framework' },
+    { id: 4, name: 'Backend Development with Node.js' },
   ];
 
   // Handler for creating a new assignment
