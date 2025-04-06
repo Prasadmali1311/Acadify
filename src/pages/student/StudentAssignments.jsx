@@ -35,9 +35,7 @@ const StudentAssignments = () => {
 
   // Function to fetch data - extracted for reuse
   const fetchData = async (forceRefresh = false) => {
-    if (!currentUser) {
-      return;
-    }
+    if (!currentUser) return;
     
     try {
       setIsLoading(true);
@@ -83,7 +81,6 @@ const StudentAssignments = () => {
       setTimeout(() => {
         document.querySelector('.assignment-cards')?.classList.remove('highlight-update');
       }, 1500);
-      
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load data. Please try again later.');
@@ -91,7 +88,7 @@ const StudentAssignments = () => {
       setIsLoading(false);
     }
   };
-
+  
   // Fetch student's assignments and courses
   useEffect(() => {
     if (currentUser?.uid) {
@@ -155,10 +152,9 @@ const StudentAssignments = () => {
       
       // Wait a moment for Firestore to process
       setTimeout(async () => {
-        await fetchData(true);
+        await fetchData(true); // Force a fresh fetch from Firestore
         alert('Assignment submitted successfully!');
-      }, 1000);
-      
+      }, 1500); // Longer timeout to ensure Firestore consistency
     } catch (err) {
       console.error('Error submitting assignment:', err);
       alert('Failed to submit assignment. Please try again.');

@@ -350,28 +350,38 @@ export const getTeacherAssignments = async (teacherId) => {
 // Get all assignments for a student
 export const getStudentAssignments = async (studentId) => {
   try {
+    console.log("%c getStudentAssignments CALLED:", "font-size: 14px; color: blue; font-weight: bold;");
+    console.log("Student ID:", studentId);
+    
     if (!studentId) {
       console.error("Error: No studentId provided to getStudentAssignments");
       return [];
     }
     
-    // Get enrolled courses
+    // STEP 1: Get enrolled courses
+    console.log("STEP 1: Fetching enrolled courses");
     const enrolledCourses = await getEnrolledCourses(studentId);
+    console.log(`Found ${enrolledCourses.length} enrolled courses:`, enrolledCourses);
     
     if (enrolledCourses.length === 0) {
+      console.warn("Student has no enrolled courses");
       return [];
     }
     
-    // Get assignments for each course
+    // STEP 2: Get assignments for each course
+    console.log("STEP 2: Fetching assignments for each course");
     const assignments = [];
+    let totalAssignments = 0;
     
     for (const course of enrolledCourses) {
       if (!course || !course.id) {
+        console.warn("Invalid course object:", course);
         continue;
       }
       
+      console.log(`Getting assignments for course: ${course.id} (${course.name || 'unnamed'})`);
       try {
-        // Direct query to assignments collection
+        // DIRECT QUERY VERSION - more reliable
         const assignmentsRef = collection(db, 'assignments');
         const q = query(
           assignmentsRef,
@@ -379,9 +389,11 @@ export const getStudentAssignments = async (studentId) => {
         );
         
         const querySnapshot = await getDocs(q);
+        console.log(`Direct query found ${querySnapshot.size} assignments for course ${course.id}`);
         
         querySnapshot.forEach(doc => {
           const data = doc.data();
+          console.log(`Processing assignment: ${doc.id}`, data);
           
           assignments.push({
             id: doc.id,
@@ -393,14 +405,21 @@ export const getStudentAssignments = async (studentId) => {
                      (data.deadline && data.deadline.toDate ? data.deadline.toDate() : 
                      (data.deadline ? new Date(data.deadline) : new Date()))
           });
+          totalAssignments++;
         });
       } catch (err) {
         console.error(`Error fetching assignments for course ${course.id}:`, err);
       }
     }
     
-    // Get submission status for each assignment
+    console.log(`STEP 2 COMPLETE: Found ${totalAssignments} total assignments`);
+    console.log("Raw assignments:", assignments);
+    
+    // STEP 3: Get submission status for each assignment
+    console.log("STEP 3: Processing submission status");
     for (let i = 0; i < assignments.length; i++) {
+      console.log(`Processing submission for assignment ${i+1}/${assignments.length}: ${assignments[i].id}`);
+      
       try {
         const submissionsRef = collection(db, 'submissions');
         const q = query(
@@ -410,13 +429,14 @@ export const getStudentAssignments = async (studentId) => {
         );
         
         const querySnapshot = await getDocs(q);
+        console.log(`Found ${querySnapshot.size} submissions for assignment ${assignments[i].id}`);
         
         if (!querySnapshot.empty) {
           const submission = querySnapshot.docs[0].data();
           assignments[i].submissionId = querySnapshot.docs[0].id;
           assignments[i].submissionDate = submission.submittedAt?.toDate ? 
-                                         submission.submittedAt.toDate() :
-                                         (submission.submittedAt || null);
+                                          submission.submittedAt.toDate() :
+                                          (submission.submittedAt || null);
           assignments[i].grade = submission.grade || null;
           assignments[i].feedback = submission.feedback || '';
           assignments[i].status = submission.grade ? 'graded' : 'submitted';
@@ -436,9 +456,10 @@ export const getStudentAssignments = async (studentId) => {
       return new Date(a.deadline) - new Date(b.deadline);
     });
     
+    console.log("FINAL ASSIGNMENTS:", JSON.stringify(assignments, null, 2));
     return assignments;
   } catch (error) {
-    console.error("Error in getStudentAssignments:", error);
+    console.error("CRITICAL ERROR in getStudentAssignments:", error);
     return []; // Return empty array to avoid breaking the UI
   }
 };
@@ -734,13 +755,234 @@ export const getStudentCoursePerformance = async (studentId, courseId) => {
   }
 };
 
-// Remove these debug/test functions
-export const createSampleAssignmentsForStudent = async () => {
-  console.warn("Test functions have been disabled in production");
-  return false;
+// ========== TEST/DEBUG FUNCTIONS ==========
+
+// Create sample assignments directly for a student (for testing)
+export const createSampleAssignmentsForStudent = async (studentId) => {
+  try {
+    console.log("%c 🔄 STARTING SAMPLE CREATION", "background: #f0f0f0; color: #333; font-weight: bold; padding: 2px 4px; border-radius: 2px;");
+    console.log("%c Student ID: " + studentId, "color: blue");
+    
+    if (!studentId) {
+      console.error("%c ❌ ERROR: No studentId provided", "color: red; font-weight: bold");
+      return false;
+    }
+    
+    // First, make sure the student is enrolled in at least one course
+    console.log("%c 1. Checking for enrolled courses...", "color: purple");
+    const enrolledCourses = await getEnrolledCourses(studentId);
+    console.log("%c Found " + enrolledCourses.length + " enrolled courses", "color: purple");
+    console.log(enrolledCourses);
+    
+    let courseToUse = null;
+    
+    if (enrolledCourses.length === 0) {
+      console.log("%c No enrolled courses found. Creating or finding a course...", "color: orange");
+      
+      // Create a sample course if none exists
+      const coursesRef = collection(db, 'courses');
+      
+      // First check if there are any existing courses we can use
+      console.log("%c Checking for existing courses...", "color: blue");
+      const existingCoursesSnapshot = await getDocs(coursesRef);
+      
+      if (!existingCoursesSnapshot.empty) {
+        // Use an existing course
+        const existingCourse = existingCoursesSnapshot.docs[0];
+        console.log("%c Using existing course: " + existingCourse.id, "color: green");
+        console.log(existingCourse.data());
+        
+        // Enroll student in this course
+        console.log("%c Enrolling student in existing course...", "color: blue");
+        const enrollmentsRef = collection(db, 'enrollments');
+        await addDoc(enrollmentsRef, {
+          studentId: studentId,
+          courseId: existingCourse.id,
+          enrolledAt: serverTimestamp(),
+          progress: 0,
+          status: 'active'
+        });
+        
+        courseToUse = {
+          id: existingCourse.id,
+          ...existingCourse.data()
+        };
+        
+        console.log("%c Successfully enrolled student in course", "color: green");
+      } else {
+        // Create a new course if none exist
+        console.log("%c No existing courses found. Creating new course...", "color: orange");
+        const sampleCourse = {
+          name: 'Sample Web Development Course',
+          description: 'A sample course for testing',
+          instructorId: 'sample-instructor',
+          instructorName: 'Dr. Test Instructor',
+          level: 'Beginner',
+          duration: '8 weeks',
+          createdAt: serverTimestamp(),
+          status: 'active'
+        };
+        
+        const courseRef = await addDoc(coursesRef, sampleCourse);
+        console.log("%c Created new course with ID: " + courseRef.id, "color: green");
+        
+        // Enroll student in the new course
+        console.log("%c Enrolling student in new course...", "color: blue");
+        const enrollmentsRef = collection(db, 'enrollments');
+        await addDoc(enrollmentsRef, {
+          studentId: studentId,
+          courseId: courseRef.id,
+          enrolledAt: serverTimestamp(),
+          progress: 0,
+          status: 'active'
+        });
+        
+        courseToUse = {
+          id: courseRef.id,
+          ...sampleCourse
+        };
+        
+        console.log("%c Successfully enrolled student in new course", "color: green");
+      }
+    } else {
+      // Use the first enrolled course
+      courseToUse = enrolledCourses[0];
+      console.log("%c Using already enrolled course: " + courseToUse.id, "color: green");
+    }
+    
+    if (!courseToUse) {
+      console.error("%c ❌ ERROR: Failed to find or create a course", "color: red; font-weight: bold");
+      return false;
+    }
+    
+    // Check if the course already has assignments
+    console.log("%c 2. Checking if course already has assignments...", "color: purple");
+    const existingAssignments = await getCourseAssignments(courseToUse.id);
+    console.log("%c Found " + existingAssignments.length + " existing assignments", "color: purple");
+    
+    if (existingAssignments.length > 0) {
+      console.log("%c Course already has assignments. No need to create more.", "color: orange");
+      return true;
+    }
+    
+    // Now create 3 sample assignments for the course
+    console.log("%c 3. Creating sample assignments for course: " + courseToUse.id, "color: purple");
+    const assignmentsRef = collection(db, 'assignments');
+    
+    const sampleAssignments = [
+      {
+        title: 'Sample Assignment 1 - HTML Basics',
+        description: 'Create a simple HTML webpage with proper semantic structure.',
+        courseId: courseToUse.id,
+        courseName: courseToUse.name,
+        teacherId: courseToUse.instructorId || 'sample-instructor',
+        instructorName: courseToUse.instructorName || 'Sample Instructor',
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        createdAt: serverTimestamp(),
+        status: 'active'
+      },
+      {
+        title: 'Sample Assignment 2 - CSS Styling',
+        description: 'Add CSS styling to your HTML webpage from Assignment 1.',
+        courseId: courseToUse.id,
+        courseName: courseToUse.name,
+        teacherId: courseToUse.instructorId || 'sample-instructor',
+        instructorName: courseToUse.instructorName || 'Sample Instructor',
+        deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        createdAt: serverTimestamp(),
+        status: 'active'
+      },
+      {
+        title: 'Sample Assignment 3 - JavaScript Basics',
+        description: 'Add JavaScript functionality to your webpage.',
+        courseId: courseToUse.id,
+        courseName: courseToUse.name,
+        teacherId: courseToUse.instructorId || 'sample-instructor',
+        instructorName: courseToUse.instructorName || 'Sample Instructor',
+        deadline: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000), // 21 days from now
+        createdAt: serverTimestamp(),
+        status: 'active'
+      }
+    ];
+    
+    // Add the assignments to Firestore
+    for (const assignment of sampleAssignments) {
+      console.log("%c Creating assignment: " + assignment.title, "color: blue");
+      try {
+        const docRef = await addDoc(assignmentsRef, assignment);
+        console.log("%c Created assignment with ID: " + docRef.id, "color: green");
+      } catch (err) {
+        console.error("%c ❌ ERROR creating assignment: " + err.message, "color: red");
+      }
+    }
+    
+    console.log("%c ✅ Successfully created sample assignments for student", "color: green; font-weight: bold");
+    return true;
+  } catch (error) {
+    console.error("%c ❌ CRITICAL ERROR in createSampleAssignmentsForStudent:", "color: red; font-weight: bold");
+    console.error(error);
+    return false;
+  }
 };
 
-export const createDirectTestAssignment = async () => {
-  console.warn("Test functions have been disabled in production");
-  return false;
+// Create a direct test assignment for debugging (bypasses normal flow)
+export const createDirectTestAssignment = async (studentId) => {
+  try {
+    console.log("Creating DIRECT test assignment for:", studentId);
+    
+    if (!studentId) {
+      console.error("No student ID provided");
+      return false;
+    }
+    
+    // 1. First get enrolled courses for the student
+    const enrollmentsRef = collection(db, 'enrollments');
+    const q = query(enrollmentsRef, where('studentId', '==', studentId));
+    const enrollmentSnapshot = await getDocs(q);
+    
+    if (enrollmentSnapshot.empty) {
+      console.error("Student has no course enrollments");
+      return false;
+    }
+    
+    // Get the first course ID the student is enrolled in
+    const courseId = enrollmentSnapshot.docs[0].data().courseId;
+    console.log("Using course ID:", courseId);
+    
+    // Get course details
+    const courseDoc = await getDoc(doc(db, 'courses', courseId));
+    if (!courseDoc.exists()) {
+      console.error("Course not found:", courseId);
+      return false;
+    }
+    
+    const courseData = courseDoc.data();
+    console.log("Course data:", courseData);
+    
+    // 2. Create a test assignment directly in Firestore
+    const assignmentsRef = collection(db, 'assignments');
+    const assignmentData = {
+      title: "DIRECT TEST: Debugging Assignment",
+      description: "This is a direct test assignment created for debugging purposes.",
+      courseId: courseId,
+      courseName: courseData.name || "Test Course",
+      teacherId: courseData.instructorId || "test-teacher",
+      instructorName: courseData.instructorName || "Test Instructor",
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
+      createdAt: serverTimestamp(),
+      status: 'active'
+    };
+    
+    const assignmentRef = await addDoc(assignmentsRef, assignmentData);
+    console.log("Created direct test assignment:", assignmentRef.id);
+    
+    return {
+      success: true,
+      assignmentId: assignmentRef.id,
+      courseId: courseId
+    };
+  } catch (error) {
+    console.error("Error creating direct test assignment:", error);
+    return false;
+  }
 }; 
