@@ -1,4 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { 
+  getStudentAssignments, 
+  getEnrolledCourses, 
+  submitAssignment
+} from '../../firebase/firestoreService';
 import './StudentAssignments.css';
 
 const StudentAssignments = () => {
@@ -8,88 +14,90 @@ const StudentAssignments = () => {
   const [currentAssignment, setCurrentAssignment] = useState(null);
   const [submissionText, setSubmissionText] = useState('');
   const [fileAttached, setFileAttached] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
+  const [renderKey, setRenderKey] = useState(0); // Force re-render key
   
-  // Sample assignments data
-  const assignments = [
-    { 
-      id: 1, 
-      title: 'Responsive Portfolio Website', 
-      class: 'HTML & CSS Fundamentals', 
-      instructor: 'Dr. Emma Richards',
-      deadline: '2025-04-15', 
-      status: 'pending',
-      description: 'Create a responsive portfolio website using HTML5 and CSS3. Implement mobile-first design principles.',
-      graded: false
-    },
-    { 
-      id: 2, 
-      title: 'Interactive Quiz App', 
-      class: 'JavaScript Essentials', 
-      instructor: 'Prof. David Chen',
-      deadline: '2025-04-05', 
-      status: 'pending',
-      description: 'Build an interactive quiz application with JavaScript. Include timer, scoring, and result feedback.',
-      graded: false
-    },
-    { 
-      id: 3, 
-      title: 'CSS Grid Layout Challenge', 
-      class: 'HTML & CSS Fundamentals', 
-      instructor: 'Dr. Emma Richards',
-      deadline: '2025-03-01', 
-      status: 'submitted',
-      submittedDate: '2025-02-28',
-      description: 'Design a complex webpage layout using CSS Grid. Include responsive breakpoints.',
-      graded: false
-    },
-    { 
-      id: 4, 
-      title: 'API Integration Project', 
-      class: 'Backend Development with Node.js', 
-      instructor: 'Dr. Michael Thompson',
-      deadline: '2025-03-15', 
-      status: 'submitted',
-      submittedDate: '2025-03-14',
-      description: 'Develop a RESTful API with Node.js and Express. Implement CRUD operations and authentication.',
-      graded: false
-    },
-    { 
-      id: 5, 
-      title: 'Component Architecture Design', 
-      class: 'React Framework', 
-      instructor: 'Dr. Sarah Johnson',
-      deadline: '2025-02-20', 
-      status: 'graded',
-      submittedDate: '2025-02-19',
-      gradedDate: '2025-02-25',
-      grade: 'A',
-      feedback: 'Excellent component structure and state management. Well-organized code with proper React patterns.',
-      description: 'Create a React application with reusable components. Implement proper state management and props.',
-      graded: true
-    },
-    { 
-      id: 6, 
-      title: 'State Management Project', 
-      class: 'JavaScript Essentials', 
-      instructor: 'Prof. David Chen',
-      deadline: '2025-02-10', 
-      status: 'graded',
-      submittedDate: '2025-02-09',
-      gradedDate: '2025-02-15',
-      grade: 'B+',
-      feedback: 'Good implementation of state management patterns. Some room for improvement in code organization.',
-      description: 'Implement different state management patterns in JavaScript. Compare and contrast approaches.',
-      graded: true
+  // Get current user
+  const { currentUser } = useAuth();
+  
+  // State for assignments and courses
+  const [assignments, setAssignments] = useState([]);
+  const [classes, setClasses] = useState([]);
+
+  // Force component to update
+  const forceUpdate = useCallback(() => {
+    setRenderKey(prevKey => prevKey + 1);
+    setLastUpdated(new Date().toLocaleTimeString());
+  }, []);
+
+  // Function to fetch data - extracted for reuse
+  const fetchData = async (forceRefresh = false) => {
+    if (!currentUser) {
+      return;
     }
-  ];
-  
-  // Sample class data for filtering
-  const classes = [
-    { id: 1, name: 'HTML & CSS Fundamentals' },
-    { id: 2, name: 'JavaScript Essentials' },
-    { id: 3, name: 'React Framework' },
-    { id: 4, name: 'Backend Development with Node.js' }
-  ];
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Fetch enrolled courses first
+      const fetchedCourses = await getEnrolledCourses(currentUser.uid);
+      
+      // Format courses for dropdown
+      const formattedCourses = fetchedCourses.map(course => ({
+        id: course.id,
+        name: course.name
+      }));
+      
+      setClasses(formattedCourses);
+      
+      // Fetch assignments
+      const fetchedAssignments = await getStudentAssignments(currentUser.uid);
+      
+      // Format assignments for display
+      const formattedAssignments = fetchedAssignments.map(assignment => ({
+        id: assignment.id,
+        title: assignment.title || 'Untitled Assignment',
+        class: assignment.courseName || 'Unknown Course',
+        courseId: assignment.courseId || 'unknown-course',
+        instructor: assignment.instructorName || 'Instructor',
+        deadline: assignment.deadline,
+        status: assignment.status || 'pending',
+        description: assignment.description || 'No description provided',
+        submittedDate: assignment.submissionDate,
+        gradedDate: assignment.gradedDate,
+        grade: assignment.grade,
+        feedback: assignment.feedback,
+        graded: assignment.status === 'graded'
+      }));
+      
+      // Update the assignments state and force a re-render
+      setAssignments([...formattedAssignments]);
+      forceUpdate();
+      
+      // Add animation highlighting to make changes more visible
+      document.querySelector('.assignment-cards')?.classList.add('highlight-update');
+      setTimeout(() => {
+        document.querySelector('.assignment-cards')?.classList.remove('highlight-update');
+      }, 1500);
+      
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load data. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch student's assignments and courses
+  useEffect(() => {
+    if (currentUser?.uid) {
+      fetchData();
+    }
+  }, [currentUser]);
 
   // Calculate days left or overdue
   const getDaysIndicator = (deadline) => {
@@ -121,28 +129,62 @@ const StudentAssignments = () => {
   };
 
   // Handle submitting an assignment
-  const handleSubmitAssignment = (e) => {
+  const handleSubmitAssignment = async (e) => {
     e.preventDefault();
-    // In a real app, you would send this data to your backend
-    console.log("Submitting assignment:", {
-      assignmentId: currentAssignment.id,
-      text: submissionText,
-      fileAttached,
-      submittedDate: new Date().toISOString()
-    });
     
-    // Reset form and close modal
-    setSubmissionText('');
-    setFileAttached(false);
-    setShowSubmitModal(false);
+    try {
+      setIsSubmitting(true);
+      
+      // Create submission object
+      const submissionData = {
+        assignmentId: currentAssignment.id,
+        studentId: currentUser.uid,
+        courseId: currentAssignment.courseId,
+        content: submissionText,
+        fileAttached,
+        submissionDate: new Date().toISOString()
+      };
+      
+      // Submit to Firestore
+      const result = await submitAssignment(submissionData);
+      
+      // Reset form and close modal
+      setSubmissionText('');
+      setFileAttached(false);
+      setShowSubmitModal(false);
+      
+      // Wait a moment for Firestore to process
+      setTimeout(async () => {
+        await fetchData(true);
+        alert('Assignment submitted successfully!');
+      }, 1000);
+      
+    } catch (err) {
+      console.error('Error submitting assignment:', err);
+      alert('Failed to submit assignment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container" key={renderKey}>
       <div className="welcome-section">
         <div className="welcome-text">
           <h1 className="welcome-heading">Your Assignments</h1>
           <p className="welcome-subtitle">View, submit, and manage your course assignments</p>
+        </div>
+        <div className="action-buttons">
+          <button 
+            className="refresh-button" 
+            onClick={() => {
+              fetchData(true);
+              forceUpdate();
+            }}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
       </div>
 
@@ -173,83 +215,144 @@ const StudentAssignments = () => {
             <option value="graded">Graded</option>
           </select>
         </div>
+        <div className="last-updated-info">
+          Updated: {lastUpdated}
+        </div>
       </div>
 
-      <div className="assignment-cards">
-        {filteredAssignments.length > 0 ? (
-          filteredAssignments.map((assignment) => (
-            <div key={assignment.id} className={`assignment-card ${assignment.status}`}>
-              <div className="assignment-card-header">
-                <h3 className="assignment-card-title">{assignment.title}</h3>
-                <div className={`assignment-card-status ${assignment.status}`}>
-                  {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
-                </div>
-              </div>
-              <div className="assignment-card-class">
-                <span>{assignment.class}</span>
-                <span className="assignment-card-instructor">{assignment.instructor}</span>
-              </div>
-              <div className="assignment-card-description">
-                {assignment.description}
-              </div>
-              <div className="assignment-card-meta">
-                {assignment.status === 'pending' && (
-                  <>
-                    <div className="assignment-card-deadline">
-                      <span className="meta-label">Deadline:</span>
-                      <span>{assignment.deadline}</span>
-                    </div>
-                    <div className="assignment-card-days">
-                      {getDaysIndicator(assignment.deadline)}
-                    </div>
-                  </>
-                )}
-                {assignment.status === 'submitted' && (
-                  <>
-                    <div className="assignment-card-deadline">
-                      <span className="meta-label">Submitted:</span>
-                      <span>{assignment.submittedDate}</span>
-                    </div>
-                    <div className="assignment-card-status-text">
-                      Awaiting grade
-                    </div>
-                  </>
-                )}
-                {assignment.status === 'graded' && (
-                  <>
-                    <div className="assignment-card-grade">
-                      <span className="meta-label">Grade:</span>
-                      <span className="grade">{assignment.grade}</span>
-                    </div>
-                    <div className="assignment-card-feedback">
-                      <span className="meta-label">Feedback:</span>
-                      <span>{assignment.feedback}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="assignment-card-actions">
-                <button className="action-button view">View Details</button>
-                {assignment.status === 'pending' && (
-                  <button 
-                    className="action-button submit"
-                    onClick={() => handleOpenSubmitModal(assignment)}
-                  >
-                    Submit
-                  </button>
-                )}
-                {assignment.status === 'submitted' && (
-                  <button className="action-button edit">Edit Submission</button>
-                )}
+      {isLoading ? (
+        <div className="loading-state">
+          <p>Loading assignments...</p>
+        </div>
+      ) : error ? (
+        <div className="error-state">
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()}>Retry</button>
+        </div>
+      ) : (
+        <>
+          {assignments.length === 0 && (
+            <div className="empty-state">
+              <h3>No assignments found</h3>
+              <p>You don't have any assignments yet. This could be because:</p>
+              <ul>
+                <li>You are not enrolled in any courses</li>
+                <li>Your courses don't have any assignments yet</li>
+                <li>There was an error loading your assignments</li>
+              </ul>
+              <div className="empty-state-actions">
+                <button 
+                  className="primary-button"
+                  onClick={() => window.location.href = '/courses'}
+                >
+                  Explore Available Courses
+                </button>
+                <button 
+                  className="secondary-button"
+                  onClick={fetchData}
+                >
+                  Refresh Assignments
+                </button>
               </div>
             </div>
-          ))
-        ) : (
-          <div className="no-assignments">
-            No assignments match your criteria
-          </div>
-        )}
-      </div>
+          )}
+          
+          {assignments.length > 0 && (
+            <div className="assignment-cards">
+              {filteredAssignments.length > 0 ? (
+                filteredAssignments.map((assignment) => (
+                  <div key={assignment.id} className={`assignment-card ${assignment.status}`}>
+                    <div className="assignment-card-header">
+                      <h3 className="assignment-card-title">{assignment.title}</h3>
+                      <div className={`assignment-card-status ${assignment.status}`}>
+                        {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                      </div>
+                    </div>
+                    <div className="assignment-card-class">
+                      <span>{assignment.class}</span>
+                      <span className="assignment-card-instructor">{assignment.instructor}</span>
+                    </div>
+                    <div className="assignment-card-description">
+                      {assignment.description}
+                    </div>
+                    <div className="assignment-card-meta">
+                      {assignment.status === 'pending' && (
+                        <>
+                          <div className="assignment-card-deadline">
+                            <span className="meta-label">Deadline:</span>
+                            <span>{assignment.deadline instanceof Date ? 
+                                  assignment.deadline.toLocaleDateString() : 
+                                  (typeof assignment.deadline === 'string' ? 
+                                    new Date(assignment.deadline).toLocaleDateString() : 
+                                    'Unknown date')}</span>
+                          </div>
+                          <div className="assignment-card-days">
+                            {getDaysIndicator(assignment.deadline)}
+                          </div>
+                        </>
+                      )}
+                      {assignment.status === 'submitted' && (
+                        <>
+                          <div className="assignment-card-deadline">
+                            <span className="meta-label">Submitted:</span>
+                            <span>{assignment.submittedDate instanceof Date ? 
+                                  assignment.submittedDate.toLocaleDateString() : 
+                                  (typeof assignment.submittedDate === 'string' ? 
+                                    new Date(assignment.submittedDate).toLocaleDateString() : 
+                                    'Unknown date')}</span>
+                          </div>
+                          <div className="assignment-card-status-text">
+                            Awaiting grade
+                          </div>
+                        </>
+                      )}
+                      {assignment.status === 'graded' && (
+                        <>
+                          <div className="assignment-card-grade">
+                            <span className="meta-label">Grade:</span>
+                            <span className="grade">{assignment.grade}</span>
+                          </div>
+                          <div className="assignment-card-feedback">
+                            <span className="meta-label">Feedback:</span>
+                            <span>{assignment.feedback}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="assignment-card-actions">
+                      <button className="action-button view">View Details</button>
+                      {assignment.status === 'pending' && (
+                        <button 
+                          className="action-button submit"
+                          onClick={() => handleOpenSubmitModal(assignment)}
+                        >
+                          Submit
+                        </button>
+                      )}
+                      {assignment.status === 'submitted' && (
+                        <button className="action-button edit">Edit Submission</button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-assignments">
+                  <p>No assignments match your criteria.</p>
+                  <button 
+                    className="filter-reset-button" 
+                    onClick={() => {
+                      setSelectedStatus('all');
+                      setSelectedClass('all');
+                    }}
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Modal for submitting an assignment */}
       {showSubmitModal && currentAssignment && (
@@ -288,11 +391,20 @@ const StudentAssignments = () => {
                 </div>
               </div>
               <div className="form-actions">
-                <button type="button" className="cancel-button" onClick={() => setShowSubmitModal(false)}>
+                <button 
+                  type="button" 
+                  className="cancel-button" 
+                  onClick={() => !isSubmitting && setShowSubmitModal(false)}
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="submit-button">
-                  Submit Assignment
+                <button 
+                  type="submit" 
+                  className="submit-button"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Assignment'}
                 </button>
               </div>
             </form>

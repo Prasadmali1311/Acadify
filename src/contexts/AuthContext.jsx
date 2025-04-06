@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
+import { initializeDatabase } from '../firebase/initializeData';
 
 const AuthContext = createContext();
 
@@ -35,6 +36,16 @@ export function AuthProvider({ children }) {
       role: role,
       createdAt: new Date().toISOString()
     });
+
+    // If the user is a teacher, initialize the database with courses
+    if (role === 'teacher') {
+      try {
+        await initializeDatabase(user.uid);
+      } catch (error) {
+        console.error('Error initializing database:', error);
+        // Continue anyway - don't block signup
+      }
+    }
 
     return userCredential;
   }

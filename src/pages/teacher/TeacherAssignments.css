@@ -574,4 +574,82 @@
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+}
+
+.no-classes-warning {
+  margin-top: 10px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.no-classes-warning p {
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.no-classes-warning .action-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.no-classes-warning .action-button:hover {
+  background-color: #0069d9;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.refresh-button {
+  padding: 0.375rem 0.75rem;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background-color: #e5e7eb;
+}
+
+.refresh-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.last-updated {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+@keyframes highlightAnimation {
+  0% { background-color: rgba(59, 130, 246, 0.1); }
+  50% { background-color: rgba(59, 130, 246, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.highlight-update {
+  animation: highlightAnimation 1.5s ease;
 } 
