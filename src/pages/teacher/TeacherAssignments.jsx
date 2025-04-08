@@ -1,11 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  getTeacherAssignments, 
-  getInstructorCourses, 
-  createAssignment, 
-  updateAssignment 
-} from '../../firebase/firestoreService';
+import axios from 'axios';
+import { getApiUrl } from '../../config/database';
 import './TeacherAssignments.css';
 
 const TeacherAssignments = () => {
@@ -20,7 +16,7 @@ const TeacherAssignments = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
-  const [renderKey, setRenderKey] = useState(0); // Force re-render key
+  const [renderKey, setRenderKey] = useState(0);
   
   // Get current user
   const { currentUser } = useAuth();
@@ -49,16 +45,21 @@ const TeacherAssignments = () => {
       console.log("FETCH STARTED: Current User:", currentUser);
       console.log("FETCH STARTED: User ID:", currentUser.uid);
       
+      // Get the instructor ID from the user's profile or use a default
+      const instructorId = currentUser.profile?.instructorId || currentUser.uid;
+      
       // Fetch courses first
-      const fetchedCourses = await getInstructorCourses(currentUser.uid);
-      console.log("DEBUG: Fetched Courses:", JSON.stringify(fetchedCourses));
+      const coursesResponse = await axios.get(getApiUrl('instructorCourses'), {
+        params: { instructorId }
+      });
+      console.log("DEBUG: Fetched Courses:", coursesResponse.data);
       
       // Format courses for the dropdown
-      const formattedCourses = fetchedCourses.map(course => ({
-        id: course.id,
+      const formattedCourses = coursesResponse.data.map(course => ({
+        id: course._id,
         name: course.name
       }));
-      console.log("DEBUG: Formatted Courses:", JSON.stringify(formattedCourses));
+      console.log("DEBUG: Formatted Courses:", formattedCourses);
       
       setClasses(formattedCourses);
       
@@ -66,27 +67,28 @@ const TeacherAssignments = () => {
       if (formattedCourses.length > 0) {
         setNewAssignmentClass(formattedCourses[0].id);
       } else {
-        console.warn("WARNING: No courses found for this teacher");
+        console.warn("WARNING: No courses found for this instructor");
       }
       
       // Fetch assignments
-      console.log("DEBUG: Attempting to fetch assignments for teacherId:", currentUser.uid);
-      const fetchedAssignments = await getTeacherAssignments(currentUser.uid);
-      console.log("DEBUG: Fetched Assignments:", JSON.stringify(fetchedAssignments));
+      console.log("DEBUG: Attempting to fetch assignments for instructorId:", instructorId);
+      const assignmentsResponse = await axios.get(getApiUrl('teacherAssignments'), {
+        params: { instructorId }
+      });
+      console.log("DEBUG: Fetched Assignments:", assignmentsResponse.data);
       
       // Format assignments for UI
-      const formattedAssignments = fetchedAssignments.map(assignment => {
+      const formattedAssignments = assignmentsResponse.data.map(assignment => {
         // Calculate submission stats (in a real app, this would come from your backend)
         const totalStudents = Math.floor(Math.random() * 30) + 10; // Random for demo
         const submissions = Math.floor(Math.random() * totalStudents);
         
-        // Ensure all required properties exist
         return {
-          id: assignment.id || 'unknown-id',
+          id: assignment._id,
           title: assignment.title || 'Untitled Assignment',
           class: assignment.courseName || 'Unknown Class',
           description: assignment.description || 'No description provided',
-          publishedDate: assignment.createdAt ? new Date(assignment.createdAt.seconds * 1000).toISOString().split('T')[0] : 'Unknown',
+          publishedDate: assignment.createdAt ? new Date(assignment.createdAt).toISOString().split('T')[0] : 'Unknown',
           deadline: assignment.deadline ? new Date(assignment.deadline).toISOString().split('T')[0] : 'Unknown',
           status: assignment.status || 'active',
           submissions,
@@ -94,7 +96,7 @@ const TeacherAssignments = () => {
         };
       });
       
-      console.log("DEBUG: Formatted Assignments:", JSON.stringify(formattedAssignments));
+      console.log("DEBUG: Formatted Assignments:", formattedAssignments);
       console.log("DEBUG: Setting assignments state with count:", formattedAssignments.length);
       
       // Update the assignments state and force a re-render
@@ -148,13 +150,16 @@ const TeacherAssignments = () => {
         throw new Error("Selected course not found");
       }
       
+      // Get the instructor ID from the user's profile or use a default
+      const instructorId = currentUser.profile?.instructorId || currentUser.uid;
+      
       // Create assignment data
       const assignmentData = {
         title: newAssignmentTitle,
         description: newAssignmentDescription,
         courseId: newAssignmentClass,
         courseName: selectedCourseObj.name,
-        teacherId: currentUser.uid,
+        instructorId: instructorId,
         instructorName: `${currentUser.profile?.firstName || ''} ${currentUser.profile?.lastName || ''}`.trim() || 'Teacher',
         deadline: new Date(newAssignmentDeadline),
         status: 'draft'
@@ -162,9 +167,9 @@ const TeacherAssignments = () => {
       
       console.log("DEBUG: Assignment data to be created:", assignmentData);
       
-      // Create the assignment in Firestore
-      const result = await createAssignment(assignmentData);
-      console.log("DEBUG: Assignment created successfully:", result);
+      // Create the assignment using MongoDB API
+      const response = await axios.post(getApiUrl('createAssignment'), assignmentData);
+      console.log("DEBUG: Assignment created successfully:", response.data);
       
       // Reset form
       setNewAssignmentTitle('');
@@ -174,7 +179,7 @@ const TeacherAssignments = () => {
       // Close modal
       setShowModal(false);
       
-      // Wait a moment for Firestore to process
+      // Wait a moment for the database to process
       setTimeout(async () => {
         console.log("DEBUG: Refreshing assignments after creation");
         await fetchData();
@@ -193,10 +198,13 @@ const TeacherAssignments = () => {
     try {
       setIsLoading(true);
       
-      // Update the assignment status in Firestore
-      await updateAssignment(id, { status: 'active' });
+      // Update the assignment status using MongoDB API
+      await axios.put(getApiUrl('updateAssignment'), {
+        assignmentId: id,
+        status: 'active'
+      });
       
-      // Refresh the assignments list instead of just updating the UI
+      // Refresh the assignments list
       await fetchData();
       
     } catch (err) {

@@ -1,13 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  getStudentAssignments, 
-  getEnrolledCourses, 
-  submitAssignment
-} from '../../firebase/firestoreService';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
-import { getApiUrl, getDatabaseType } from '../../config/database';
+import { getApiUrl } from '../../config/database';
 import './StudentAssignments.css';
 
 const StudentAssignments = () => {
@@ -19,8 +14,7 @@ const StudentAssignments = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
-  const [renderKey, setRenderKey] = useState(0); // Force re-render key
+  const [renderKey, setRenderKey] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
   
@@ -29,69 +23,51 @@ const StudentAssignments = () => {
   
   // State for assignments and courses
   const [assignments, setAssignments] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const [courses, setCourses] = useState([]);
 
   // Force component to update
   const forceUpdate = useCallback(() => {
     setRenderKey(prevKey => prevKey + 1);
-    setLastUpdated(new Date().toLocaleTimeString());
   }, []);
 
-  // Function to fetch data - extracted for reuse
-  const fetchData = async (forceRefresh = false) => {
-    if (!currentUser) return;
-    
+  // Function to fetch data
+  const fetchData = async () => {
     try {
       setIsLoading(true);
-      setError(null);
-      
-      // Fetch enrolled courses first
-      const fetchedCourses = await getEnrolledCourses(currentUser.uid);
-      
-      // Format courses for dropdown
-      const formattedCourses = fetchedCourses.map(course => ({
-        id: course.id,
-        name: course.name
-      }));
-      
-      setClasses(formattedCourses);
-      
-      // Fetch assignments - use forceRefresh to bust cache if needed
-      const fetchedAssignments = await getStudentAssignments(
-        currentUser.uid, 
-        forceRefresh ? new Date().getTime() : undefined
-      );
-      
-      // Format assignments for display
-      const formattedAssignments = fetchedAssignments.map(assignment => ({
-        id: assignment.id,
-        title: assignment.title || 'Untitled Assignment',
-        class: assignment.courseName || 'Unknown Course',
-        courseId: assignment.courseId || 'unknown-course',
-        instructor: assignment.instructorName || 'Instructor',
-        deadline: assignment.deadline,
-        status: assignment.status || 'pending',
-        description: assignment.description || 'No description provided',
-        submittedDate: assignment.submissionDate,
-        gradedDate: assignment.gradedDate,
-        grade: assignment.grade,
-        feedback: assignment.feedback,
-        graded: assignment.status === 'graded'
-      }));
-      
-      // Update the assignments state and force a re-render
-      setAssignments([...formattedAssignments]);
-      forceUpdate();
-      
-      // Add animation highlighting to make changes more visible
-      document.querySelector('.assignment-cards')?.classList.add('highlight-update');
-      setTimeout(() => {
-        document.querySelector('.assignment-cards')?.classList.remove('highlight-update');
-      }, 1500);
-    } catch (err) {
-      console.error('Error fetching data:', err);
-      setError('Failed to load data. Please try again later.');
-    } finally {
+      const studentId = currentUser?.profile?.studentId || 'student1';
+
+      // Fetch enrolled courses
+      const coursesResponse = await fetch(`${getApiUrl()}/courses/student?studentId=${studentId}`);
+      if (!coursesResponse.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+      const coursesData = await coursesResponse.json();
+      console.log('Fetched courses:', coursesData);
+
+      // Fetch assignments
+      const assignmentsResponse = await fetch(`${getApiUrl()}/assignments/student?studentId=${studentId}`);
+      if (!assignmentsResponse.ok) {
+        throw new Error('Failed to fetch assignments');
+      }
+      const assignmentsData = await assignmentsResponse.json();
+      console.log('Fetched assignments:', assignmentsData);
+
+      // Format assignments with course names
+      const formattedAssignments = assignmentsData.map(assignment => {
+        const course = coursesData.find(c => c._id === assignment.courseId);
+        return {
+          ...assignment,
+          courseName: course?.name || 'Unknown Course',
+          instructorName: course?.instructorName || 'Unknown Instructor'
+        };
+      });
+
+      setCourses(coursesData);
+      setAssignments(formattedAssignments);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError('Failed to load assignments. Please try again later.');
       setIsLoading(false);
     }
   };
@@ -101,7 +77,6 @@ const StudentAssignments = () => {
     if (currentUser?.uid) {
       fetchData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   // Calculate days left or overdue
@@ -123,23 +98,22 @@ const StudentAssignments = () => {
   // Filter assignments based on selected status and class
   const filteredAssignments = assignments.filter(assignment => {
     const matchesStatus = selectedStatus === 'all' || assignment.status === selectedStatus;
-    const matchesClass = selectedClass === 'all' || assignment.class === selectedClass;
+    const matchesClass = selectedClass === 'all' || assignment.courseName === selectedClass;
     return matchesStatus && matchesClass;
   });
 
-  // Handle opening the submission modal
-  const handleOpenSubmitModal = (assignment) => {
-    setCurrentAssignment(assignment);
-    setShowSubmitModal(true);
-  };
+  // Handle file upload
+  const onDrop = useCallback(acceptedFiles => {
+    setUploadedFiles(acceptedFiles.map(file => ({
+      file,
+      name: file.name,
+      size: file.size,
+      progress: 0
+    })));
+  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      setUploadedFiles(acceptedFiles.map(file => ({
-        file,
-        preview: URL.createObjectURL(file)
-      })));
-    },
+    onDrop,
     accept: {
       'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
       'application/pdf': ['.pdf'],
@@ -150,68 +124,69 @@ const StudentAssignments = () => {
     }
   });
 
+  // Handle opening the submission modal
+  const handleOpenSubmitModal = (assignment) => {
+    setCurrentAssignment(assignment);
+    setShowSubmitModal(true);
+    setUploadedFiles([]);
+    setSubmissionText('');
+  };
+
   // Handle submitting an assignment
   const handleSubmitAssignment = async (e) => {
     e.preventDefault();
-    
+    if (!currentAssignment) return;
+
     try {
       setIsSubmitting(true);
+      const studentId = currentUser.profile?.studentId || 'student1';
       
-      // Upload files first if using MongoDB
-      const uploadedFileIds = [];
-      if (getDatabaseType() === 'mongodb' && uploadedFiles.length > 0) {
-        for (const { file } of uploadedFiles) {
+      // Upload files first if any
+      const fileIds = [];
+      if (uploadedFiles.length > 0) {
+        for (const fileObj of uploadedFiles) {
           const formData = new FormData();
-          formData.append('file', file);
+          formData.append('file', fileObj.file);
           
           const response = await axios.post(getApiUrl('upload'), formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            },
             onUploadProgress: (progressEvent) => {
-              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
               setUploadProgress(prev => ({
                 ...prev,
-                [file.name]: percentCompleted
+                [fileObj.name]: progress
               }));
             }
           });
           
-          if (response.data && response.data.file) {
-            uploadedFileIds.push(response.data.file.filename);
+          if (response.data && response.data.fileId) {
+            fileIds.push(response.data.fileId);
           }
         }
       }
-      
-      // Create submission object
+
+      // Create submission data
       const submissionData = {
         assignmentId: currentAssignment.id,
-        studentId: currentUser.uid,
+        studentId: studentId,
         courseId: currentAssignment.courseId,
         content: submissionText,
-        fileAttached: uploadedFileIds.length > 0,
-        fileIds: uploadedFileIds,
+        fileIds: fileIds,
         submissionDate: new Date().toISOString()
       };
+
+      // Submit the assignment
+      await axios.post(getApiUrl('submissions'), submissionData);
       
-      // Submit to appropriate database
-      if (getDatabaseType() === 'mongodb') {
-        // Submit to MongoDB
-        await axios.post(getApiUrl('submissions'), submissionData);
-      } else {
-        // Submit to Firebase
-        await submitAssignment(submissionData);
-      }
-      
-      // Reset form and close modal
-      setSubmissionText('');
-      setUploadedFiles([]);
-      setUploadProgress({});
+      // Close modal and reset states
       setShowSubmitModal(false);
+      setCurrentAssignment(null);
+      setUploadedFiles([]);
+      setSubmissionText('');
+      setUploadProgress({});
       
-      // Wait a moment for the database to process
+      // Refresh assignments
       setTimeout(async () => {
-        await fetchData(true);
+        await fetchData();
         alert('Assignment submitted successfully!');
       }, 1500);
     } catch (err) {
@@ -233,7 +208,7 @@ const StudentAssignments = () => {
           <button 
             className="refresh-button" 
             onClick={() => {
-              fetchData(true);
+              fetchData();
               forceUpdate();
             }}
             disabled={isLoading}
@@ -251,9 +226,9 @@ const StudentAssignments = () => {
             className="filter-select"
           >
             <option value="all">All Classes</option>
-            {classes.map(classItem => (
-              <option key={classItem.id} value={classItem.name}>
-                {classItem.name}
+            {courses.map(course => (
+              <option key={course._id} value={course.name}>
+                {course.name}
               </option>
             ))}
           </select>
@@ -270,180 +245,82 @@ const StudentAssignments = () => {
             <option value="graded">Graded</option>
           </select>
         </div>
-        <div className="last-updated-info">
-          Updated: {lastUpdated}
-        </div>
       </div>
 
       {isLoading ? (
-        <div className="loading-state">
-          <p>Loading assignments...</p>
-        </div>
+        <div className="loading">Loading assignments...</div>
       ) : error ? (
-        <div className="error-state">
-          <p>{error}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
-        </div>
+        <div className="error">{error}</div>
       ) : (
-        <>
-          {assignments.length === 0 && (
-            <div className="empty-state">
-              <h3>No assignments found</h3>
-              <p>You don't have any assignments yet. This could be because:</p>
-              <ul>
-                <li>You are not enrolled in any courses</li>
-                <li>Your courses don't have any assignments yet</li>
-                <li>There was an error loading your assignments</li>
-              </ul>
-              <div className="empty-state-actions">
-                <button 
-                  className="primary-button"
-                  onClick={() => window.location.href = '/courses'}
-                >
-                  Explore Available Courses
-                </button>
-                <button 
-                  className="secondary-button"
-                  onClick={fetchData}
-                >
-                  Refresh Assignments
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {assignments.length > 0 && (
-            <div className="assignment-cards">
-              {filteredAssignments.length > 0 ? (
-                filteredAssignments.map((assignment) => (
-                  <div key={assignment.id} className={`assignment-card ${assignment.status}`}>
-                    <div className="assignment-card-header">
-                      <h3 className="assignment-card-title">{assignment.title}</h3>
-                      <div className={`assignment-card-status ${assignment.status}`}>
-                        {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
-                      </div>
-                    </div>
-                    <div className="assignment-card-class">
-                      <span>{assignment.class}</span>
-                      <span className="assignment-card-instructor">{assignment.instructor}</span>
-                    </div>
-                    <div className="assignment-card-description">
-                      {assignment.description}
-                    </div>
-                    <div className="assignment-card-meta">
-                      {assignment.status === 'pending' && (
-                        <>
-                          <div className="assignment-card-deadline">
-                            <span className="meta-label">Deadline:</span>
-                            <span>{assignment.deadline instanceof Date ? 
-                                  assignment.deadline.toLocaleDateString() : 
-                                  (typeof assignment.deadline === 'string' ? 
-                                    new Date(assignment.deadline).toLocaleDateString() : 
-                                    'Unknown date')}</span>
-                          </div>
-                          <div className="assignment-card-days">
-                            {getDaysIndicator(assignment.deadline)}
-                          </div>
-                        </>
-                      )}
-                      {assignment.status === 'submitted' && (
-                        <>
-                          <div className="assignment-card-deadline">
-                            <span className="meta-label">Submitted:</span>
-                            <span>{assignment.submittedDate instanceof Date ? 
-                                  assignment.submittedDate.toLocaleDateString() : 
-                                  (typeof assignment.submittedDate === 'string' ? 
-                                    new Date(assignment.submittedDate).toLocaleDateString() : 
-                                    'Unknown date')}</span>
-                          </div>
-                          <div className="assignment-card-status-text">
-                            Awaiting grade
-                          </div>
-                        </>
-                      )}
-                      {assignment.status === 'graded' && (
-                        <>
-                          <div className="assignment-card-grade">
-                            <span className="meta-label">Grade:</span>
-                            <span className="grade">{assignment.grade}</span>
-                          </div>
-                          <div className="assignment-card-feedback">
-                            <span className="meta-label">Feedback:</span>
-                            <span>{assignment.feedback}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <div className="assignment-card-actions">
-                      <button className="action-button view">View Details</button>
-                      {assignment.status === 'pending' && (
-                        <button 
-                          className="action-button submit"
-                          onClick={() => handleOpenSubmitModal(assignment)}
-                        >
-                          Submit
-                        </button>
-                      )}
-                      {assignment.status === 'submitted' && (
-                        <button className="action-button edit">Edit Submission</button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="no-assignments">
-                  <p>No assignments match your criteria.</p>
-                  <button 
-                    className="filter-reset-button" 
-                    onClick={() => {
-                      setSelectedStatus('all');
-                      setSelectedClass('all');
-                    }}
-                  >
-                    Reset Filters
-                  </button>
+        <div className="assignment-cards">
+          {filteredAssignments.length > 0 ? (
+            filteredAssignments.map(assignment => (
+              <div key={assignment.id} className="assignment-card">
+                <div className="assignment-header">
+                  <h3>{assignment.title}</h3>
+                  <span className={`status-badge ${assignment.status}`}>
+                    {assignment.status}
+                  </span>
                 </div>
-              )}
+                <div className="assignment-details">
+                  <p><strong>Course:</strong> {assignment.courseName}</p>
+                  <p><strong>Instructor:</strong> {assignment.instructorName}</p>
+                  <p><strong>Deadline:</strong> {new Date(assignment.deadline).toLocaleDateString()}</p>
+                  {getDaysIndicator(assignment.deadline)}
+                </div>
+                <div className="assignment-description">
+                  <p>{assignment.description}</p>
+                </div>
+                {assignment.status === 'pending' && (
+                  <button
+                    className="submit-button"
+                    onClick={() => handleOpenSubmitModal(assignment)}
+                  >
+                    Submit Assignment
+                  </button>
+                )}
+                {assignment.status === 'graded' && (
+                  <div className="grade-section">
+                    <p><strong>Grade:</strong> {assignment.grade}</p>
+                    <p><strong>Feedback:</strong> {assignment.feedback}</p>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="no-assignments">
+              <p>No assignments found matching your criteria.</p>
             </div>
           )}
-        </>
+        </div>
       )}
 
-      {/* Modal for submitting an assignment */}
-      {showSubmitModal && currentAssignment && (
+      {showSubmitModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div className="modal-header">
-              <h2>Submit Assignment: {currentAssignment.title}</h2>
-              <button className="close-button" onClick={() => setShowSubmitModal(false)}>×</button>
-            </div>
+            <h2>Submit Assignment</h2>
             <form onSubmit={handleSubmitAssignment}>
               <div className="form-group">
-                <label htmlFor="submissionText">Submission Text (Optional)</label>
+                <label>Submission Text</label>
                 <textarea
-                  id="submissionText"
                   value={submissionText}
                   onChange={(e) => setSubmissionText(e.target.value)}
-                  rows="6"
-                  placeholder="Type your response or any comments about your submission here..."
+                  placeholder="Enter your submission text here..."
+                  required
                 />
               </div>
               <div className="form-group">
-                <label>Upload Files</label>
-                <div
-                  {...getRootProps()}
-                  className={`file-upload-dropzone ${isDragActive ? 'active' : ''}`}
-                >
+                <label>Attach Files</label>
+                <div {...getRootProps()} className={`file-upload-dropzone ${isDragActive ? 'active' : ''}`}>
                   <input {...getInputProps()} />
                   {isDragActive ? (
                     <p>Drop the files here ...</p>
                   ) : (
-                    <p>Drag 'n' drop some files here, or click to select files</p>
+                    <p>Drag and drop files here, or click to select files</p>
                   )}
                 </div>
                 {uploadedFiles.length > 0 && (
                   <div className="uploaded-files">
-                    <h4>Files to upload:</h4>
                     <ul>
                       {uploadedFiles.map(({ file }) => (
                         <li key={file.name}>
@@ -453,7 +330,7 @@ const StudentAssignments = () => {
                               {(file.size / 1024 / 1024).toFixed(2)} MB
                             </span>
                           </div>
-                          {uploadProgress[file.name] && (
+                          {uploadProgress[file.name] !== undefined && (
                             <div className="progress-bar">
                               <div
                                 className="progress"
@@ -468,20 +345,18 @@ const StudentAssignments = () => {
                 )}
               </div>
               <div className="form-actions">
-                <button 
-                  type="button" 
-                  className="cancel-button" 
-                  onClick={() => !isSubmitting && setShowSubmitModal(false)}
-                  disabled={isSubmitting}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSubmitModal(false);
+                    setUploadedFiles([]);
+                    setUploadProgress({});
+                  }}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
-                  className="submit-button"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Assignment'}
+                <button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </form>

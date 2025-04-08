@@ -1,191 +1,127 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { getInstructorCourses, createCourse } from '../../firebase/firestoreService';
+import { getApiUrl } from '../../config/database';
+import axios from 'axios';
 import './Classes.css';
 
 const Classes = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [newClassName, setNewClassName] = useState('');
-  const [newClassDescription, setNewClassDescription] = useState('');
+  const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Get current user from AuthContext
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newCourse, setNewCourse] = useState({
+    name: '',
+    description: '',
+    code: ''
+  });
   const { currentUser } = useAuth();
-  
-  // State for courses
-  const [classes, setClasses] = useState([]);
 
-  // Fetch classes from Firestore
   useEffect(() => {
-    async function fetchClasses() {
+    const fetchCourses = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        
-        const fetchedCourses = await getInstructorCourses(currentUser.uid);
-        
-        // Transform data to match our UI format
-        const formattedCourses = fetchedCourses.map(course => ({
-          id: course.id,
-          name: course.name,
-          description: course.description,
-          students: 0, // You might want to calculate this from enrollments
-          nextClass: course.nextClass || 'Not scheduled yet'
-        }));
-        
-        setClasses(formattedCourses);
+
+        const response = await axios.get(getApiUrl('instructorCourses'), {
+          params: { instructorId: currentUser.uid }
+        });
+        setCourses(response.data);
       } catch (err) {
-        console.error('Error fetching classes:', err);
-        setError('Failed to load classes. Please try again later.');
+        console.error('Error fetching courses:', err);
+        setError('Failed to load courses. Please try again later.');
       } finally {
         setIsLoading(false);
       }
-    }
-    
-    if (currentUser) {
-      fetchClasses();
+    };
+
+    if (currentUser?.uid) {
+      fetchCourses();
     }
   }, [currentUser]);
 
-  const handleCreateClass = async (e) => {
+  const handleCreateCourse = async (e) => {
     e.preventDefault();
-    if (!newClassName) return;
-    
     try {
-      setIsLoading(true);
+      const response = await axios.post(getApiUrl('courses'), {
+        ...newCourse,
+        instructorId: currentUser.uid
+      });
       
-      const newCourseData = {
-        name: newClassName,
-        description: newClassDescription,
-        instructorId: currentUser.uid,
-        instructorName: `${currentUser.profile?.firstName || ''} ${currentUser.profile?.lastName || ''}`.trim() || 'Teacher',
-        level: 'Beginner',
-        duration: '10 weeks',
-        status: 'active'
-      };
-      
-      const createdCourse = await createCourse(newCourseData);
-      
-      // Add the new course to the state
-      setClasses([...classes, {
-        id: createdCourse.id,
-        name: createdCourse.name,
-        description: createdCourse.description,
-        students: 0,
-        nextClass: 'Not scheduled yet'
-      }]);
-      
-      setNewClassName('');
-      setNewClassDescription('');
-      setShowModal(false);
+      setCourses([...courses, response.data]);
+      setShowCreateModal(false);
+      setNewCourse({ name: '', description: '', code: '' });
     } catch (err) {
-      console.error('Error creating class:', err);
-      setError('Failed to create class. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.error('Error creating course:', err);
+      alert('Failed to create course. Please try again.');
     }
   };
 
   return (
     <div className="dashboard-container">
       <div className="welcome-section">
-        <div className="welcome-text">
-          <h1 className="welcome-heading">Your Classes</h1>
-          <p className="welcome-subtitle">Manage and monitor your classes</p>
-        </div>
-        <button className="report-button" onClick={() => setShowModal(true)}>
-          <span className="text-xl">➕</span>
-          <span>Create Class</span>
+        <h1>My Courses</h1>
+        <button 
+          className="create-button"
+          onClick={() => setShowCreateModal(true)}
+        >
+          Create New Course
         </button>
       </div>
 
-      <div className="content-grid">
-        <div className="content-card full-width">
-          <div className="card-header">
-            <h2 className="card-title">All Classes</h2>
-          </div>
-          
-          {isLoading && (
-            <div className="loading-state">
-              <p>Loading classes...</p>
+      {isLoading ? (
+        <div className="loading">Loading courses...</div>
+      ) : error ? (
+        <div className="error">{error}</div>
+      ) : (
+        <div className="courses-grid">
+          {courses.map(course => (
+            <div key={course._id} className="course-card">
+              <div className="course-info">
+                <h3>{course.name}</h3>
+                <p>{course.description}</p>
+                <p>Course Code: {course.code}</p>
+              </div>
             </div>
-          )}
-          
-          {error && (
-            <div className="error-state">
-              <p>{error}</p>
-              <button onClick={() => window.location.reload()}>Retry</button>
-            </div>
-          )}
-          
-          {!isLoading && !error && (
-            <>
-              {classes.length === 0 ? (
-                <div className="empty-state">
-                  <p>You haven't created any classes yet.</p>
-                  <button className="create-first-class" onClick={() => setShowModal(true)}>
-                    Create Your First Class
-                  </button>
-                </div>
-              ) : (
-                <div className="class-list">
-                  <div className="class-list-header">
-                    <div className="class-name">Class Name</div>
-                    <div className="class-students">Students</div>
-                    <div className="class-description">Description</div>
-                    <div className="class-next">Next Session</div>
-                  </div>
-                  {classes.map((classItem) => (
-                    <div key={classItem.id} className="class-item">
-                      <div className="class-name">{classItem.name}</div>
-                      <div className="class-students">{classItem.students} students</div>
-                      <div className="class-description">{classItem.description}</div>
-                      <div className="class-next">{classItem.nextClass}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* Modal for creating a new class */}
-      {showModal && (
+      {showCreateModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div className="modal-header">
-              <h2>Create New Class</h2>
-              <button className="close-button" onClick={() => setShowModal(false)}>×</button>
-            </div>
-            <form onSubmit={handleCreateClass}>
+            <h2>Create New Course</h2>
+            <form onSubmit={handleCreateCourse}>
               <div className="form-group">
-                <label htmlFor="className">Class Name</label>
+                <label>Course Name</label>
                 <input
                   type="text"
-                  id="className"
-                  value={newClassName}
-                  onChange={(e) => setNewClassName(e.target.value)}
+                  value={newCourse.name}
+                  onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })}
                   required
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="classDescription">Description</label>
+                <label>Description</label>
                 <textarea
-                  id="classDescription"
-                  value={newClassDescription}
-                  onChange={(e) => setNewClassDescription(e.target.value)}
-                  rows="3"
+                  value={newCourse.description}
+                  onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Course Code</label>
+                <input
+                  type="text"
+                  value={newCourse.code}
+                  onChange={(e) => setNewCourse({ ...newCourse, code: e.target.value })}
+                  required
                 />
               </div>
               <div className="form-actions">
-                <button type="button" className="cancel-button" onClick={() => setShowModal(false)}>
+                <button type="button" onClick={() => setShowCreateModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="submit-button" disabled={isLoading}>
-                  {isLoading ? 'Creating...' : 'Create Class'}
-                </button>
+                <button type="submit">Create Course</button>
               </div>
             </form>
           </div>

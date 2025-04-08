@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
-  getEnrolledCourses, 
-  getAvailableCourses, 
-  enrollStudentInCourse 
-} from '../../firebase/firestoreService';
+import { getApiUrl } from '../../config/database';
 import './Courses.css';
 
 const Courses = () => {
@@ -30,12 +26,20 @@ const Courses = () => {
         setIsLoading(true);
         setError(null);
         
-        // Fetch enrolled and available courses
-        const enrolled = await getEnrolledCourses(currentUser.uid);
+        // Get the student ID from the user's profile or use a default
+        const studentId = currentUser.profile?.studentId || 'student1';
+        
+        // Fetch enrolled courses
+        const enrolledResponse = await fetch(`${getApiUrl('enrolledCourses')}?studentId=${studentId}`);
+        if (!enrolledResponse.ok) {
+          throw new Error('Failed to fetch enrolled courses');
+        }
+        const enrolledData = await enrolledResponse.json();
+        console.log('Enrolled courses data:', enrolledData);
         
         // Transform data for UI
-        const formattedEnrolled = enrolled.map(course => ({
-          id: course.id,
+        const formattedEnrolled = enrolledData.map(course => ({
+          id: course._id,
           name: course.name,
           instructor: course.instructorName || 'Unknown Instructor',
           progress: course.progress || Math.floor(Math.random() * 100), // Random for demo
@@ -43,6 +47,7 @@ const Courses = () => {
           assignments: 2 // This would be calculated in a real app
         }));
         
+        console.log('Formatted enrolled courses:', formattedEnrolled);
         setEnrolledCourses(formattedEnrolled);
         
         // Only fetch available courses if on that tab
@@ -58,21 +63,36 @@ const Courses = () => {
     }
     
     fetchCourses();
-  }, [currentUser]);
+  }, [currentUser, activeTab]);
   
   // Function to fetch available courses (separate to only load when needed)
   const fetchAvailableCourses = async () => {
     if (!currentUser) return;
     
     try {
-      const available = await getAvailableCourses(currentUser.uid);
+      const studentId = currentUser.profile?.studentId || 'student1';
+      
+      // Fetch all courses
+      const allCoursesResponse = await fetch(`${getApiUrl('courses')}`);
+      if (!allCoursesResponse.ok) {
+        throw new Error('Failed to fetch available courses');
+      }
+      const allCourses = await allCoursesResponse.json();
+      
+      // Get enrolled course IDs
+      const enrolledCourseIds = enrolledCourses.map(course => course.id);
+      
+      // Filter out courses the student is already enrolled in
+      const available = allCourses.filter(course => 
+        !enrolledCourseIds.includes(course._id)
+      );
       
       // Transform data for UI
       const formattedAvailable = available.map(course => ({
-        id: course.id,
+        id: course._id,
         name: course.name,
         instructor: course.instructorName || 'Unknown Instructor',
-        enrolled: Math.floor(Math.random() * 40) + 20, // Random for demo
+        enrolled: course.students?.length || 0,
         duration: course.duration || '10 weeks',
         level: course.level || 'Intermediate'
       }));
@@ -96,8 +116,24 @@ const Courses = () => {
     try {
       setEnrolling(true);
       
-      // Enroll the student
-      await enrollStudentInCourse(currentUser.uid, courseId);
+      const studentId = currentUser.profile?.studentId || 'student1';
+      
+      // Enroll the student in the course
+      const response = await fetch(`${getApiUrl('course')}/${courseId}/enroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentId,
+          name: currentUser.displayName || 'Student',
+          email: currentUser.email || ''
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to enroll in course');
+      }
       
       // Find the enrolled course
       const enrolledCourse = availableCourses.find(course => course.id === courseId);
