@@ -1,0 +1,92 @@
+.file-list-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.file-list-container h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.refresh-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.refresh-button:hover {
+    background-color: #45a049;
+}
+
+.file-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.file-table th,
+.file-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.file-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.file-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.action-button {
+    padding: 6px 12px;
+    margin: 0 4px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.action-button.download {
+    background-color: #2196F3;
+    color: white;
+}
+
+.action-button.download:hover {
+    background-color: #0b7dda;
+}
+
+.action-button.delete {
+    background-color: #f44336;
+    color: white;
+}
+
+.action-button.delete:hover {
+    background-color: #da190b;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.error {
+    color: #f44336;
+    padding: 20px;
+    text-align: center;
+}
+
+.no-files {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+} 

@@ -5,6 +5,9 @@ import {
   getEnrolledCourses, 
   submitAssignment
 } from '../../firebase/firestoreService';
+import { useDropzone } from 'react-dropzone';
+import axios from 'axios';
+import { getApiUrl, getDatabaseType } from '../../config/database';
 import './StudentAssignments.css';
 
 const StudentAssignments = () => {
@@ -13,12 +16,13 @@ const StudentAssignments = () => {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [currentAssignment, setCurrentAssignment] = useState(null);
   const [submissionText, setSubmissionText] = useState('');
-  const [fileAttached, setFileAttached] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleTimeString());
   const [renderKey, setRenderKey] = useState(0); // Force re-render key
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState({});
   
   // Get current user
   const { currentUser } = useAuth();
@@ -129,6 +133,23 @@ const StudentAssignments = () => {
     setShowSubmitModal(true);
   };
 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (acceptedFiles) => {
+      setUploadedFiles(acceptedFiles.map(file => ({
+        file,
+        preview: URL.createObjectURL(file)
+      })));
+    },
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'application/zip': ['.zip'],
+      'application/x-zip-compressed': ['.zip']
+    }
+  });
+
   // Handle submitting an assignment
   const handleSubmitAssignment = async (e) => {
     e.preventDefault();
@@ -136,29 +157,63 @@ const StudentAssignments = () => {
     try {
       setIsSubmitting(true);
       
+      // Upload files first if using MongoDB
+      const uploadedFileIds = [];
+      if (getDatabaseType() === 'mongodb' && uploadedFiles.length > 0) {
+        for (const { file } of uploadedFiles) {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await axios.post(getApiUrl('upload'), formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: (progressEvent) => {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(prev => ({
+                ...prev,
+                [file.name]: percentCompleted
+              }));
+            }
+          });
+          
+          if (response.data && response.data.file) {
+            uploadedFileIds.push(response.data.file.filename);
+          }
+        }
+      }
+      
       // Create submission object
       const submissionData = {
         assignmentId: currentAssignment.id,
         studentId: currentUser.uid,
         courseId: currentAssignment.courseId,
         content: submissionText,
-        fileAttached,
+        fileAttached: uploadedFileIds.length > 0,
+        fileIds: uploadedFileIds,
         submissionDate: new Date().toISOString()
       };
       
-      // Submit to Firestore
-      await submitAssignment(submissionData);
+      // Submit to appropriate database
+      if (getDatabaseType() === 'mongodb') {
+        // Submit to MongoDB
+        await axios.post(getApiUrl('submissions'), submissionData);
+      } else {
+        // Submit to Firebase
+        await submitAssignment(submissionData);
+      }
       
       // Reset form and close modal
       setSubmissionText('');
-      setFileAttached(false);
+      setUploadedFiles([]);
+      setUploadProgress({});
       setShowSubmitModal(false);
       
-      // Wait a moment for Firestore to process
+      // Wait a moment for the database to process
       setTimeout(async () => {
-        await fetchData(true); // Force a fresh fetch from Firestore
+        await fetchData(true);
         alert('Assignment submitted successfully!');
-      }, 1500); // Longer timeout to ensure Firestore consistency
+      }, 1500);
     } catch (err) {
       console.error('Error submitting assignment:', err);
       alert('Failed to submit assignment. Please try again.');
@@ -374,21 +429,43 @@ const StudentAssignments = () => {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="submissionFile">Upload Files</label>
-                <div className="file-upload-container">
-                  <input
-                    type="file"
-                    id="submissionFile"
-                    onChange={() => setFileAttached(true)}
-                    className="file-input"
-                  />
-                  <button type="button" className="file-upload-button">
-                    Choose File
-                  </button>
-                  <span className="file-status">
-                    {fileAttached ? "File selected" : "No file chosen"}
-                  </span>
+                <label>Upload Files</label>
+                <div
+                  {...getRootProps()}
+                  className={`file-upload-dropzone ${isDragActive ? 'active' : ''}`}
+                >
+                  <input {...getInputProps()} />
+                  {isDragActive ? (
+                    <p>Drop the files here ...</p>
+                  ) : (
+                    <p>Drag 'n' drop some files here, or click to select files</p>
+                  )}
                 </div>
+                {uploadedFiles.length > 0 && (
+                  <div className="uploaded-files">
+                    <h4>Files to upload:</h4>
+                    <ul>
+                      {uploadedFiles.map(({ file }) => (
+                        <li key={file.name}>
+                          <div className="file-info">
+                            <span>{file.name}</span>
+                            <span className="file-size">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          </div>
+                          {uploadProgress[file.name] && (
+                            <div className="progress-bar">
+                              <div
+                                className="progress"
+                                style={{ width: `${uploadProgress[file.name]}%` }}
+                              />
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
               <div className="form-actions">
                 <button 

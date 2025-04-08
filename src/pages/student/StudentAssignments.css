@@ -574,4 +574,62 @@
   font-size: 0.75rem;
   font-family: monospace;
   cursor: pointer;
+}
+
+.file-upload-dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 4px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.file-upload-dropzone.active {
+  border-color: #2196f3;
+  background-color: #e3f2fd;
+}
+
+.uploaded-files {
+  margin-top: 1rem;
+}
+
+.uploaded-files ul {
+  list-style: none;
+  padding: 0;
+}
+
+.uploaded-files li {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.file-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.file-size {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background-color: #f0f0f0;
+  border-radius: 2px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
 } 
