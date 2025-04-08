@@ -12,6 +12,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
 import RoleBasedAssignments from './components/RoleBasedAssignments';
 import RoleBasedReports from './components/RoleBasedReports';
+import FileUpload from './components/FileUpload';
+import FileList from './components/FileList';
 import { useAuth } from './contexts/AuthContext';
 
 function App() {
@@ -41,6 +43,22 @@ function App() {
           <Route path="reports" element={<RoleBasedReports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="profile" element={<Profile />} />
+          <Route 
+            path="upload" 
+            element={
+              <ProtectedRoute>
+                <FileUpload />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="files" 
+            element={
+              <ProtectedRoute>
+                <FileList />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="classes" 
             element={

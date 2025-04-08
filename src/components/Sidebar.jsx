@@ -15,6 +15,7 @@ const Sidebar = () => {
     const commonItems = [
       { path: '/', label: 'Dashboard', icon: '📊' },
       { path: 'assignments', label: 'Assignments', icon: '📝' },
+      { path: 'files', label: 'Files', icon: '📁' },
     ];
 
     const commonFooterItems = [
