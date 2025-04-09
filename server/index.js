@@ -9,12 +9,13 @@ import submissionRoutes from './routes/submissions.js';
 import multer from 'multer';
 import { connectDB } from './db.js';
 import process from 'process';
+import userRoutes from './routes/users.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // CORS configuration
 app.use(cors({
@@ -32,6 +33,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api/users', userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
