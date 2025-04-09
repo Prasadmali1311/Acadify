@@ -45,3 +45,6 @@ ui-debug.log
 
 # Coverage reports
 /coverage
+
+# MongoDB data directory
+data/db/
