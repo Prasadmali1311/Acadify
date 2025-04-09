@@ -20,32 +20,57 @@ const Courses = () => {
   // Fetch enrolled courses
   useEffect(() => {
     async function fetchCourses() {
-      if (!currentUser) return;
+      if (!currentUser) {
+        console.log('No current user found');
+        return;
+      }
       
       try {
         setIsLoading(true);
         setError(null);
         
-        // Get the student ID from the user's profile or use a default
-        const studentId = currentUser.profile?.studentId || 'student1';
+        // Get the student email from the user's profile
+        const studentEmail = currentUser.email;
+        console.log('Current user email:', studentEmail);
+        
+        if (!studentEmail) {
+          console.error('Student email not found in currentUser:', currentUser);
+          throw new Error('Student email not found');
+        }
         
         // Fetch enrolled courses
-        const enrolledResponse = await fetch(`${getApiUrl('enrolledCourses')}?studentId=${studentId}`);
+        const apiUrl = `${getApiUrl('enrolledCourses')}?email=${studentEmail}`;
+        console.log('Fetching enrolled courses from:', apiUrl);
+        
+        const enrolledResponse = await fetch(apiUrl);
+        console.log('Enrolled courses response status:', enrolledResponse.status);
+        
         if (!enrolledResponse.ok) {
+          const errorText = await enrolledResponse.text();
+          console.error('Failed to fetch enrolled courses. Response:', errorText);
           throw new Error('Failed to fetch enrolled courses');
         }
+        
         const enrolledData = await enrolledResponse.json();
-        console.log('Enrolled courses data:', enrolledData);
+        console.log('Raw enrolled courses data:', enrolledData);
+        
+        if (!Array.isArray(enrolledData)) {
+          console.error('Expected array of courses but got:', enrolledData);
+          throw new Error('Invalid response format from server');
+        }
         
         // Transform data for UI
-        const formattedEnrolled = enrolledData.map(course => ({
-          id: course._id,
-          name: course.name,
-          instructor: course.instructorName || 'Unknown Instructor',
-          progress: course.progress || Math.floor(Math.random() * 100), // Random for demo
-          nextClass: course.nextClass || 'Not scheduled',
-          assignments: 2 // This would be calculated in a real app
-        }));
+        const formattedEnrolled = enrolledData.map(course => {
+          console.log('Processing course:', course);
+          return {
+            id: course._id,
+            name: course.name,
+            instructor: course.instructorName || 'Unknown Instructor',
+            progress: course.progress || Math.floor(Math.random() * 100),
+            nextClass: course.nextClass || 'Not scheduled',
+            assignments: 2
+          };
+        });
         
         console.log('Formatted enrolled courses:', formattedEnrolled);
         setEnrolledCourses(formattedEnrolled);
@@ -70,7 +95,10 @@ const Courses = () => {
     if (!currentUser) return;
     
     try {
-      const studentId = currentUser.profile?.studentId || 'student1';
+      const studentEmail = currentUser.email;
+      if (!studentEmail) {
+        throw new Error('Student email not found');
+      }
       
       // Fetch all courses
       const allCoursesResponse = await fetch(`${getApiUrl('courses')}`);
@@ -116,7 +144,10 @@ const Courses = () => {
     try {
       setEnrolling(true);
       
-      const studentId = currentUser.profile?.studentId || 'student1';
+      const studentEmail = currentUser.email;
+      if (!studentEmail) {
+        throw new Error('Student email not found');
+      }
       
       // Enroll the student in the course
       const response = await fetch(`${getApiUrl('course')}/${courseId}/enroll`, {
@@ -125,9 +156,9 @@ const Courses = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          studentId,
+          studentId: currentUser.uid, // Keep studentId for reference but use email for enrollment
           name: currentUser.displayName || 'Student',
-          email: currentUser.email || ''
+          email: studentEmail
         })
       });
       
