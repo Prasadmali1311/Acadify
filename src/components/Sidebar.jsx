@@ -14,21 +14,20 @@ const Sidebar = () => {
   const getNavItems = () => {
     const commonItems = [
       { path: '/', label: 'Dashboard', icon: '📊' },
-      { path: 'assignments', label: 'Assignments', icon: '📝' },
-      { path: 'files', label: 'Files', icon: '📁' },
+      { path: '/files', label: 'Files', icon: '📁' },
     ];
 
     const commonFooterItems = [
-      { path: 'settings', label: 'Settings', icon: '⚙️' },
+      { path: '/settings', label: 'Settings', icon: '⚙️' },
     ];
 
     if (userRole === 'teacher') {
       return {
         mainItems: [
           ...commonItems,
-          { path: 'reports', label: 'Reports', icon: '📈' },
-          { path: 'classes', label: 'Classes', icon: '👥' },
-          { path: 'students', label: 'Students', icon: '🎓' },
+          { path: '/teacher/assignments', label: 'Assignments', icon: '📝' },
+          { path: '/teacher/classes', label: 'Classes', icon: '👥' },
+          { path: '/teacher/students', label: 'Students', icon: '🎓' },
         ],
         footerItems: commonFooterItems
       };
@@ -37,8 +36,8 @@ const Sidebar = () => {
     return {
       mainItems: [
         ...commonItems,
-        { path: 'reports', label: 'Reports', icon: '📈' },
-        { path: 'courses', label: 'Courses', icon: '📚' },
+        { path: '/student/courses', label: 'Courses', icon: '📚' },
+        { path: '/student/assignments', label: 'Assignments', icon: '📝' },
       ],
       footerItems: commonFooterItems
     };

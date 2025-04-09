@@ -407,7 +407,7 @@ const TeacherAssignments = () => {
                       className="action-button primary"
                       onClick={() => {
                         setShowModal(false);
-                        window.location.href = '/classes';
+                        window.location.href = '/teacher/classes';
                       }}
                     >
                       Create Class

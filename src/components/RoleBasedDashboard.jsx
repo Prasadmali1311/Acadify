@@ -1,27 +1,18 @@
-import { useAuth } from '../contexts/AuthContext';
-import StudentDashboard from '../pages/student/StudentDashboard';
-import TeacherDashboard from '../pages/teacher/TeacherDashboard';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const RoleBasedDashboard = () => {
-  const { currentUser } = useAuth();
+  const { userRole } = useAuth();
 
-  // If user is not authenticated, redirect to login
-  if (!currentUser) {
-    return <Navigate to="login" />;
-  }
-
-  // Get user role from profile
-  const userRole = currentUser.profile?.role || 'student';
-
-  // Render dashboard based on role
-  switch (userRole.toLowerCase()) {
-    case 'teacher':
-      return <TeacherDashboard />;
+  switch (userRole) {
     case 'student':
-      return <StudentDashboard />;
+      return <Navigate to="/student/dashboard" replace />;
+    case 'teacher':
+      return <Navigate to="/teacher/dashboard" replace />;
+    case 'admin':
+      return <Navigate to="/admin/dashboard" replace />;
     default:
-      return <Navigate to="login" />;
+      return <Navigate to="/unauthorized" replace />;
   }
 };
 

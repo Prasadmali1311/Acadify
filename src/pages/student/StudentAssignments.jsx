@@ -201,7 +201,7 @@ const StudentAssignments = () => {
     <div className="dashboard-container" key={renderKey}>
       <div className="welcome-section">
         <div className="welcome-text">
-          <h1 className="welcome-heading">Your Assignments</h1>
+          <h1 className="welcome-heading">Your Assignments (student)</h1>
           <p className="welcome-subtitle">View, submit, and manage your course assignments</p>
         </div>
         <div className="action-buttons">

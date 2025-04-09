@@ -17,30 +17,14 @@ router.get('/', async (req, res) => {
 // Get enrolled courses for a student
 router.get('/enrolled', async (req, res) => {
   try {
-    const { email } = req.query;
-    console.log('Received request for enrolled courses with email:', email);
-    
-    if (!email) {
-      console.error('No email provided in request');
-      return res.status(400).json({ error: 'Student email is required' });
+    const { studentId } = req.query;
+    if (!studentId) {
+      return res.status(400).json({ error: 'Student ID is required' });
     }
 
-    console.log('Searching for courses with student email:', email);
     const courses = await Course.find({
-      'students.email': email
+      'students.studentId': studentId
     });
-    
-    console.log('Found courses:', courses);
-    console.log('Number of courses found:', courses.length);
-    
-    if (courses.length === 0) {
-      console.log('No courses found for this email. Checking all courses in database...');
-      const allCourses = await Course.find();
-      console.log('Total courses in database:', allCourses.length);
-      if (allCourses.length > 0) {
-        console.log('Sample course structure:', allCourses[0]);
-      }
-    }
     
     res.status(200).json(courses);
   } catch (error) {
@@ -96,8 +80,8 @@ router.post('/:courseId/enroll', async (req, res) => {
     const { courseId } = req.params;
     const { studentId, name, email } = req.body;
     
-    if (!email || !name) {
-      return res.status(400).json({ error: 'Student email and name are required' });
+    if (!studentId || !name || !email) {
+      return res.status(400).json({ error: 'Student ID, name, and email are required' });
     }
 
     const course = await Course.findById(courseId);
@@ -105,8 +89,8 @@ router.post('/:courseId/enroll', async (req, res) => {
       return res.status(404).json({ error: 'Course not found' });
     }
 
-    // Check if student is already enrolled using email
-    const alreadyEnrolled = course.students.some(student => student.email === email);
+    // Check if student is already enrolled
+    const alreadyEnrolled = course.students.some(student => student.studentId === studentId);
     if (alreadyEnrolled) {
       return res.status(400).json({ error: 'Student already enrolled in this course' });
     }
@@ -118,29 +102,6 @@ router.post('/:courseId/enroll', async (req, res) => {
   } catch (error) {
     console.error('Error enrolling student:', error);
     res.status(500).json({ error: 'Error enrolling student' });
-  }
-});
-
-// Test route to check database state
-router.get('/test', async (req, res) => {
-  try {
-    const allCourses = await Course.find();
-    console.log('All courses in database:', allCourses);
-    
-    const testEmail = 'prasadmali13111@gmail.com';
-    const coursesWithEmail = await Course.find({
-      'students.email': testEmail
-    });
-    console.log('Courses with test email:', coursesWithEmail);
-    
-    res.status(200).json({
-      totalCourses: allCourses.length,
-      coursesWithTestEmail: coursesWithEmail.length,
-      sampleCourse: allCourses[0]
-    });
-  } catch (error) {
-    console.error('Error in test route:', error);
-    res.status(500).json({ error: 'Error in test route' });
   }
 });
 
