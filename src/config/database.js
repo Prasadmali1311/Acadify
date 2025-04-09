@@ -55,7 +55,7 @@ const config = {
 // Helper function to get the current database type
 export const getDatabaseType = () => config.databaseType;
 
-// Helper function to get API URL
+// Helper function to get the appropriate API URL based on database type
 export const getApiUrl = (endpoint) => {
   const baseUrl = config[config.databaseType].baseUrl;
   const endpointPath = config[config.databaseType].endpoints[endpoint];

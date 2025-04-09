@@ -7,9 +7,9 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { auth } from '../firebase/config';
-import axios from 'axios';
-import { getDatabaseType } from '../config/database';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase/config';
+import { initializeDatabase } from '../firebase/initializeData';
 
 const AuthContext = createContext();
 
@@ -27,21 +27,24 @@ export function AuthProvider({ children }) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
     
-    // Create user document in MongoDB
-    try {
-      await axios.post(`${getDatabaseType() === 'mongodb' ? 'http://localhost:5000/api' : ''}/users`, {
-        firebaseUid: user.uid,
-        email: user.email,
-        firstName: userInfo.firstName || '',
-        lastName: userInfo.lastName || '',
-        mobileNumber: userInfo.mobileNumber || '',
-        role: role
-      });
-    } catch (error) {
-      console.error('Error creating user in MongoDB:', error);
-      // If MongoDB creation fails, delete the Firebase user
-      await user.delete();
-      throw error;
+    // Create user document in Firestore with all user info
+    await setDoc(doc(db, 'users', user.uid), {
+      email: user.email,
+      firstName: userInfo.firstName || '',
+      lastName: userInfo.lastName || '',
+      mobileNumber: userInfo.mobileNumber || '',
+      role: role,
+      createdAt: new Date().toISOString()
+    });
+
+    // If the user is a teacher, initialize the database with courses
+    if (role === 'teacher') {
+      try {
+        await initializeDatabase(user.uid);
+      } catch (error) {
+        console.error('Error initializing database:', error);
+        // Continue anyway - don't block signup
+      }
     }
 
     return userCredential;
@@ -59,30 +62,36 @@ export function AuthProvider({ children }) {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
-    // Check if user exists in MongoDB
-    try {
-      const response = await axios.get(`${getDatabaseType() === 'mongodb' ? 'http://localhost:5000/api' : ''}/users/${user.uid}`);
+    console.log('Google user data:', user);
+    console.log('Google photo URL:', user.photoURL);
+    
+    // Check if user document exists
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
+    if (!userDoc.exists()) {
+      // Extract first and last name from Google display name
+      const displayNameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
+      const firstName = displayNameParts[0] || '';
+      const lastName = displayNameParts.slice(1).join(' ') || '';
       
-      if (!response.data) {
-        // Extract first and last name from Google display name
-        const displayNameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
-        const firstName = displayNameParts[0] || '';
-        const lastName = displayNameParts.slice(1).join(' ') || '';
-        
-        // Create user in MongoDB if it doesn't exist
-        await axios.post(`${getDatabaseType() === 'mongodb' ? 'http://localhost:5000/api' : ''}/users`, {
-          firebaseUid: user.uid,
-          email: user.email,
-          firstName: firstName,
-          lastName: lastName,
-          displayName: user.displayName || '',
-          photoURL: user.photoURL || '',
-          role: 'student'
+      // Create user document if it doesn't exist
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        firstName: firstName,
+        lastName: lastName,
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        role: 'student', // Default role
+        createdAt: new Date().toISOString()
+      });
+    } else {
+      // Update existing user with Google data if needed
+      const userData = userDoc.data();
+      if (!userData.photoURL && user.photoURL) {
+        await updateDoc(doc(db, 'users', user.uid), {
+          photoURL: user.photoURL
         });
       }
-    } catch (error) {
-      console.error('Error checking/creating user in MongoDB:', error);
-      throw error;
     }
     
     return user;
@@ -94,9 +103,9 @@ export function AuthProvider({ children }) {
 
   async function getUserRole(uid) {
     try {
-      const response = await axios.get(`${getDatabaseType() === 'mongodb' ? 'http://localhost:5000/api' : ''}/users/${uid}`);
-      if (response.data) {
-        return response.data.role;
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        return userDoc.data().role;
       }
       return null;
     } catch (error) {
@@ -107,9 +116,9 @@ export function AuthProvider({ children }) {
 
   async function getUserProfile(uid) {
     try {
-      const response = await axios.get(`${getDatabaseType() === 'mongodb' ? 'http://localhost:5000/api' : ''}/users/${uid}`);
-      if (response.data) {
-        return response.data;
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        return userDoc.data();
       }
       return null;
     } catch (error) {
@@ -121,19 +130,28 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        console.log('Auth state changed - User:', user);
+        console.log('User photo URL:', user.photoURL);
+        
         const role = await getUserRole(user.uid);
         const profile = await getUserProfile(user.uid);
+        
+        console.log('User profile from Firestore:', profile);
         
         // Create a user object with all available data
         const userWithProfile = {
           ...user,
           role,
           profile: profile || {
+            // Include Google profile data if available
             displayName: user.displayName || '',
             photoURL: user.photoURL || '',
             email: user.email || ''
           }
         };
+        
+        console.log('Final user object:', userWithProfile);
+        console.log('Final photo URL:', userWithProfile.photoURL || userWithProfile.profile?.photoURL);
         
         setUserRole(role);
         setCurrentUser(userWithProfile);
