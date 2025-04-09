@@ -22,9 +22,9 @@ const Classes = () => {
         setIsLoading(true);
         setError(null);
 
-        console.log("DEBUG: Fetching courses for instructor:", currentUser?._id);
+        console.log("DEBUG: Fetching courses for instructor:", currentUser?.id);
         const response = await axios.get(getApiUrl('instructorCourses'), {
-          params: { instructorId: currentUser._id }
+          params: { instructorId: currentUser.id }
         });
         console.log("DEBUG: Fetched courses:", response.data);
         setCourses(response.data);
@@ -36,23 +36,39 @@ const Classes = () => {
       }
     };
 
-    if (currentUser?._id) {
+    if (currentUser?.id) {
       fetchCourses();
     }
   }, [currentUser]);
 
   const handleCreateCourse = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!newCourse.name.trim()) {
+      alert('Course name is required');
+      return;
+    }
+    
+    if (!currentUser?.id) {
+      alert('User ID is not available. Please try logging in again.');
+      return;
+    }
+
     try {
       console.log("DEBUG: Creating course with data:", {
-        ...newCourse,
-        instructorId: currentUser._id,
+        name: newCourse.name.trim(),
+        description: newCourse.description.trim(),
+        code: newCourse.code.trim(),
+        instructorId: currentUser.id,
         instructorName: `${currentUser.firstName} ${currentUser.lastName}`.trim()
       });
 
       const response = await axios.post(getApiUrl('courses'), {
-        ...newCourse,
-        instructorId: currentUser._id,
+        name: newCourse.name.trim(),
+        description: newCourse.description.trim(),
+        code: newCourse.code.trim(),
+        instructorId: currentUser.id,
         instructorName: `${currentUser.firstName} ${currentUser.lastName}`.trim()
       });
       
@@ -102,12 +118,13 @@ const Classes = () => {
             <h2>Create New Course</h2>
             <form onSubmit={handleCreateCourse}>
               <div className="form-group">
-                <label>Course Name</label>
+                <label>Course Name *</label>
                 <input
                   type="text"
                   value={newCourse.name}
                   onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })}
                   required
+                  placeholder="Enter course name"
                 />
               </div>
               <div className="form-group">
@@ -115,7 +132,7 @@ const Classes = () => {
                 <textarea
                   value={newCourse.description}
                   onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-                  required
+                  placeholder="Enter course description"
                 />
               </div>
               <div className="form-group">
@@ -124,7 +141,7 @@ const Classes = () => {
                   type="text"
                   value={newCourse.code}
                   onChange={(e) => setNewCourse({ ...newCourse, code: e.target.value })}
-                  required
+                  placeholder="Enter course code"
                 />
               </div>
               <div className="form-actions">

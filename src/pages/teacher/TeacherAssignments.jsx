@@ -43,10 +43,10 @@ const TeacherAssignments = () => {
       setError(null);
       
       console.log("FETCH STARTED: Current User:", currentUser);
-      console.log("FETCH STARTED: User ID:", currentUser.uid);
+      console.log("FETCH STARTED: User ID:", currentUser.id);
       
       // Get the instructor ID from the user's profile or use a default
-      const instructorId = currentUser.profile?.instructorId || currentUser.uid;
+      const instructorId = currentUser.id;
       
       // Fetch courses first
       const coursesResponse = await axios.get(getApiUrl('instructorCourses'), {
@@ -120,8 +120,8 @@ const TeacherAssignments = () => {
 
   // Fetch teacher's courses and assignments
   useEffect(() => {
-    console.log("DEBUG: useEffect triggered. Current user:", currentUser?.uid);
-    if (currentUser?.uid) {
+    console.log("DEBUG: useEffect triggered. Current user:", currentUser?.id);
+    if (currentUser?.id) {
       fetchData();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,7 +151,7 @@ const TeacherAssignments = () => {
       }
       
       // Get the instructor ID from the user's profile or use a default
-      const instructorId = currentUser.profile?.instructorId || currentUser.uid;
+      const instructorId = currentUser.id;
       
       // Create assignment data
       const assignmentData = {
@@ -160,7 +160,7 @@ const TeacherAssignments = () => {
         courseId: newAssignmentClass,
         courseName: selectedCourseObj.name,
         instructorId: instructorId,
-        instructorName: `${currentUser.profile?.firstName || ''} ${currentUser.profile?.lastName || ''}`.trim() || 'Teacher',
+        instructorName: `${currentUser.firstName} ${currentUser.lastName}`.trim() || 'Teacher',
         deadline: new Date(newAssignmentDeadline),
         status: 'draft'
       };
@@ -418,7 +418,7 @@ const TeacherAssignments = () => {
               <div className="form-group">
                 <label htmlFor="assignmentDeadline">Deadline</label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   id="assignmentDeadline"
                   value={newAssignmentDeadline}
                   onChange={(e) => setNewAssignmentDeadline(e.target.value)}
@@ -431,23 +431,14 @@ const TeacherAssignments = () => {
                   id="assignmentDescription"
                   value={newAssignmentDescription}
                   onChange={(e) => setNewAssignmentDescription(e.target.value)}
-                  rows="4"
-                  required
+                  placeholder="Enter assignment description"
                 />
               </div>
               <div className="form-actions">
-                <button 
-                  type="button" 
-                  className="cancel-button" 
-                  onClick={() => setShowModal(false)}
-                >
+                <button type="button" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
-                  className="submit-button"
-                  disabled={isSubmitting || classes.length === 0}
-                >
+                <button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Creating...' : 'Create Assignment'}
                 </button>
               </div>

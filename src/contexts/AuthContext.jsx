@@ -125,12 +125,18 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      getUserProfile().catch(() => {
-        // If token is invalid, clear it
-        localStorage.removeItem('token');
-        setCurrentUser(null);
-        setUserRole(null);
-      });
+      getUserProfile()
+        .then(() => {
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error('Error fetching profile:', error);
+          // If token is invalid, clear it
+          localStorage.removeItem('token');
+          setCurrentUser(null);
+          setUserRole(null);
+          setLoading(false);
+        });
     } else {
       setLoading(false);
     }

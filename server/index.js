@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 // CORS configuration
 app.use(cors({
     origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'DELETE', 'PUT'],
+    credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -53,8 +53,11 @@ app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         return res.status(400).json({ error: err.message });
     }
-    res.status(500).json({ error: 'Something went wrong!' });
-    next();
+    // Ensure all errors return JSON
+    res.status(500).json({ 
+        error: 'Something went wrong!',
+        details: err.message 
+    });
 });
 
 // Start server
