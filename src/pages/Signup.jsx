@@ -13,7 +13,7 @@ const Signup = () => {
   const [role, setRole] = useState('student');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup, loginWithGoogle } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -27,30 +27,23 @@ const Signup = () => {
     try {
       setError('');
       setLoading(true);
-      await signup(email, password, role, {
+      
+      // Create user info object
+      const userInfo = {
         firstName,
         lastName,
         mobileNumber,
         role
-      });
-      navigate(from, { replace: true });
-      // navigate(from, { replace: true });
-    } catch (error) {
-      setError('Failed to create an account.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setError('');
-      setLoading(true);
-      await loginWithGoogle();
-      // navigate('/dashboard');
-      navigate(from, { replace: true });
+      // Call signup with email, password, and userInfo
+      await signup(email, password, userInfo);
+      
+      // Navigate to dashboard after successful signup
+      navigate('/dashboard');
     } catch (error) {
-      setError('Failed to sign in with Google.');
+      console.error('Signup error:', error);
+      setError(error.message || 'Failed to create an account');
     } finally {
       setLoading(false);
     }
@@ -63,6 +56,8 @@ const Signup = () => {
           <h1>Create Account</h1>
           <p>Join Acadify to start learning</p>
         </div>
+
+        {error && <div className="error-message">{error}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -105,7 +100,6 @@ const Signup = () => {
               id="mobileNumber"
               value={mobileNumber}
               onChange={(e) => setMobileNumber(e.target.value)}
-              required
             />
           </div>
 
@@ -129,7 +123,6 @@ const Signup = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              minLength={6}
             />
           </div>
 
@@ -139,47 +132,26 @@ const Signup = () => {
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="form-group input"
             >
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
             </select>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
-
-          <button
-            type="submit"
+          <button 
+            type="submit" 
             className="auth-button"
             disabled={loading}
           >
-            {loading ? 'Creating Account...' : 'Sign Up'}
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>or</span>
-        </div>
-
-        <div className="social-auth">
-          <button
-            className="social-button"
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-          >
-            <img
-              src="https://www.google.com/favicon.ico"
-              alt="Google"
-              width="20"
-              height="20"
-            />
-            Continue with Google
-          </button>
-        </div>
-
         <div className="auth-footer">
-          Already have an account?{' '}
-          <Link to="/login">Sign in</Link>
+          <p>
+            Already have an account?{' '}
+            <Link to="/login">Log in</Link>
+          </p>
         </div>
       </div>
     </div>

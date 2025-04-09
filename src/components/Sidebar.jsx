@@ -5,11 +5,8 @@ import './Sidebar.css';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { currentUser } = useAuth();
+  const { userRole } = useAuth();
   
-  // Get user role from profile
-  const userRole = currentUser?.profile?.role || 'student';
-
   // Define navigation items based on role
   const getNavItems = () => {
     const commonItems = [
@@ -72,7 +69,7 @@ const Sidebar = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              className={({ isActive }) =>
+              className={({ isActive }) => 
                 `nav-link ${isActive ? 'active' : ''}`
               }
               onClick={() => setIsOpen(false)}
@@ -88,7 +85,7 @@ const Sidebar = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              className={({ isActive }) =>
+              className={({ isActive }) => 
                 `nav-link ${isActive ? 'active' : ''}`
               }
               onClick={() => setIsOpen(false)}

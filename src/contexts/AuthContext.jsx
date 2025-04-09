@@ -1,15 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase/config';
-import { initializeDatabase } from '../firebase/initializeData';
+
+const API_URL = 'http://localhost:5000/api';
 
 const AuthContext = createContext();
 
@@ -23,146 +14,126 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
 
-  async function signup(email, password, role = 'student', userInfo = {}) {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    // Create user document in Firestore with all user info
-    await setDoc(doc(db, 'users', user.uid), {
-      email: user.email,
-      firstName: userInfo.firstName || '',
-      lastName: userInfo.lastName || '',
-      mobileNumber: userInfo.mobileNumber || '',
-      role: role,
-      createdAt: new Date().toISOString()
-    });
+  async function signup(email, password, userInfo = {}) {
+    try {
+      const response = await fetch(`${API_URL}/users/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          mobileNumber: userInfo.mobileNumber,
+          role: userInfo.role || 'student'
+        }),
+      });
 
-    // If the user is a teacher, initialize the database with courses
-    if (role === 'teacher') {
-      try {
-        await initializeDatabase(user.uid);
-      } catch (error) {
-        console.error('Error initializing database:', error);
-        // Continue anyway - don't block signup
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to sign up');
       }
-    }
 
-    return userCredential;
+      const data = await response.json();
+      
+      // Store token in localStorage
+      localStorage.setItem('token', data.token);
+      
+      // Set current user
+      setCurrentUser(data.user);
+      setUserRole(data.user.role);
+      
+      return data.user;
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    }
   }
 
   async function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
-  }
-
-  async function loginWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    
-    console.log('Google user data:', user);
-    console.log('Google photo URL:', user.photoURL);
-    
-    // Check if user document exists
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    
-    if (!userDoc.exists()) {
-      // Extract first and last name from Google display name
-      const displayNameParts = user.displayName ? user.displayName.split(' ') : ['', ''];
-      const firstName = displayNameParts[0] || '';
-      const lastName = displayNameParts.slice(1).join(' ') || '';
-      
-      // Create user document if it doesn't exist
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
-        firstName: firstName,
-        lastName: lastName,
-        displayName: user.displayName || '',
-        photoURL: user.photoURL || '',
-        role: 'student', // Default role
-        createdAt: new Date().toISOString()
+    try {
+      const response = await fetch(`${API_URL}/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
-    } else {
-      // Update existing user with Google data if needed
-      const userData = userDoc.data();
-      if (!userData.photoURL && user.photoURL) {
-        await updateDoc(doc(db, 'users', user.uid), {
-          photoURL: user.photoURL
-        });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to login');
       }
+
+      const data = await response.json();
+      
+      // Store token in localStorage
+      localStorage.setItem('token', data.token);
+      
+      // Set current user
+      setCurrentUser(data.user);
+      setUserRole(data.user.role);
+      
+      return data.user;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    
-    return user;
   }
 
   function logout() {
-    return signOut(auth);
+    // Remove token from localStorage
+    localStorage.removeItem('token');
+    
+    // Clear user state
+    setCurrentUser(null);
+    setUserRole(null);
   }
 
-  async function getUserRole(uid) {
+  async function getUserProfile() {
     try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        return userDoc.data().role;
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
       }
-      return null;
+
+      const response = await fetch(`${API_URL}/users/profile`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get user profile');
+      }
+
+      const data = await response.json();
+      setCurrentUser(data.user);
+      setUserRole(data.user.role);
+      
+      return data.user;
     } catch (error) {
-      console.error('Error fetching user role:', error);
-      return null;
+      console.error('Get profile error:', error);
+      throw error;
     }
   }
 
-  async function getUserProfile(uid) {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        return userDoc.data();
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-  }
-
+  // Check for existing token on mount
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        console.log('Auth state changed - User:', user);
-        console.log('User photo URL:', user.photoURL);
-        
-        const role = await getUserRole(user.uid);
-        const profile = await getUserProfile(user.uid);
-        
-        console.log('User profile from Firestore:', profile);
-        
-        // Create a user object with all available data
-        const userWithProfile = {
-          ...user,
-          role,
-          profile: profile || {
-            // Include Google profile data if available
-            displayName: user.displayName || '',
-            photoURL: user.photoURL || '',
-            email: user.email || ''
-          }
-        };
-        
-        console.log('Final user object:', userWithProfile);
-        console.log('Final photo URL:', userWithProfile.photoURL || userWithProfile.profile?.photoURL);
-        
-        setUserRole(role);
-        setCurrentUser(userWithProfile);
-      } else {
+    const token = localStorage.getItem('token');
+    if (token) {
+      getUserProfile().catch(() => {
+        // If token is invalid, clear it
+        localStorage.removeItem('token');
         setCurrentUser(null);
         setUserRole(null);
-      }
+      });
+    } else {
       setLoading(false);
-    });
-
-    return unsubscribe;
+    }
   }, []);
 
   const value = {
@@ -170,10 +141,8 @@ export function AuthProvider({ children }) {
     userRole,
     signup,
     login,
-    loginWithGoogle,
     logout,
-    getUserRole,
-    getUserProfile
+    getUserProfile,
   };
 
   return (

@@ -1,8 +1,12 @@
 import mongoose from 'mongoose';
 import { GridFSBucket } from 'mongodb';
 import process from 'process';
+import dotenv from 'dotenv';
 
-const mongoURI = 'mongodb://localhost:27017/acadify';
+// Load environment variables
+dotenv.config();
+
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/acadify';
 
 // GridFS bucket reference
 let bucket;

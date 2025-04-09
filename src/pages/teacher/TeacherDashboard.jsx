@@ -8,19 +8,9 @@ const TeacherDashboard = () => {
   const getUserFirstName = () => {
     if (!currentUser) return 'User';
     
-    // If we have profile data with first name
-    if (currentUser.profile && currentUser.profile.firstName) {
-      return currentUser.profile.firstName;
-    }
-    
-    // If we have a display name from Google
-    if (currentUser.profile && currentUser.profile.displayName) {
-      return currentUser.profile.displayName.split(' ')[0];
-    }
-    
-    // If we have a display name directly on the user object
-    if (currentUser.displayName) {
-      return currentUser.displayName.split(' ')[0];
+    // If we have first name in user data
+    if (currentUser.firstName) {
+      return currentUser.firstName;
     }
     
     // Fallback to email

@@ -5,7 +5,6 @@ import Signup from './pages/Signup';
 import Unauthorized from './pages/Unauthorized';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
-import RoleBasedAssignments from './components/RoleBasedAssignments';
 
 // Student pages
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -19,6 +18,7 @@ import TeacherClasses from './pages/teacher/Classes';
 import TeacherStudents from './pages/teacher/Students';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import TeacherAssignments from './pages/teacher/TeacherAssignments';
+
 // Common pages
 import Settings from './pages/Settings';
 import FileUpload from './components/FileUpload';
@@ -36,31 +36,39 @@ function App() {
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
-            <Route index element={<RoleBasedDashboard />} />
+            {/* Dashboard route */}
+            <Route path="dashboard" element={<RoleBasedDashboard />} />
             
-            {/* Student routes */}
-            <Route path="student">
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<StudentDashboard />} />
-              <Route path="courses" element={<StudentCourses />} />
-              <Route path="assignments" element={<StudentAssignments />} />
-              <Route path="profile" element={<StudentProfile />} />
+            {/* Student routes - only accessible by students */}
+            <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+              <Route path="student">
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="courses" element={<StudentCourses />} />
+                <Route path="assignments" element={<StudentAssignments />} />
+                <Route path="profile" element={<StudentProfile />} />
+              </Route>
             </Route>
 
-            {/* Teacher routes */}
-            <Route path="teacher">
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<TeacherDashboard />} />
-              <Route path="classes" element={<TeacherClasses />} />
-              <Route path="students" element={<TeacherStudents />} />
-              <Route path="profile" element={<TeacherProfile />} />
-              <Route path="assignments" element={<TeacherAssignments />} />
+            {/* Teacher routes - only accessible by teachers */}
+            <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
+              <Route path="teacher">
+                <Route index element={<Navigate to="dashboard" replace />} />
+                <Route path="dashboard" element={<TeacherDashboard />} />
+                <Route path="classes" element={<TeacherClasses />} />
+                <Route path="students" element={<TeacherStudents />} />
+                <Route path="profile" element={<TeacherProfile />} />
+                <Route path="assignments" element={<TeacherAssignments />} />
+              </Route>
             </Route>
 
-            {/* Common routes */}
+            {/* Common routes - accessible by all roles */}
             <Route path="settings" element={<Settings />} />
             <Route path="upload" element={<FileUpload />} />
             <Route path="files" element={<FileList />} />
+
+            {/* Redirect root to dashboard */}
+            <Route index element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Route>
       </Routes>

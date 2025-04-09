@@ -8,7 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -17,22 +17,10 @@ const Login = () => {
       setError('');
       setLoading(true);
       await login(email, password);
-      navigate(from, { replace: true });
+      navigate('/dashboard');
     } catch (error) {
-      setError('Failed to sign in. Please check your credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setError('');
-      setLoading(true);
-      await loginWithGoogle();
-      navigate(from, { replace: true });
-    } catch (error) {
-      setError('Failed to sign in with Google.');
+      console.error('Login error:', error);
+      setError(error.message || 'Failed to sign in. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -45,6 +33,8 @@ const Login = () => {
           <h1>Welcome Back</h1>
           <p>Sign in to your account to continue</p>
         </div>
+
+        {error && <div className="error-message">{error}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -69,8 +59,6 @@ const Login = () => {
             />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
-
           <button
             type="submit"
             className="auth-button"
@@ -80,29 +68,11 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>or</span>
-        </div>
-
-        <div className="social-auth">
-          <button
-            className="social-button"
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-          >
-            <img
-              src="https://www.google.com/favicon.ico"
-              alt="Google"
-              width="20"
-              height="20"
-            />
-            Continue with Google
-          </button>
-        </div>
-
         <div className="auth-footer">
-          Don't have an account?{' '}
-          <Link to="/signup">Sign up</Link>
+          <p>
+            Don't have an account?{' '}
+            <Link to="/signup">Sign up</Link>
+          </p>
         </div>
       </div>
     </div>

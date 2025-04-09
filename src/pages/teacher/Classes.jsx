@@ -22,9 +22,11 @@ const Classes = () => {
         setIsLoading(true);
         setError(null);
 
+        console.log("DEBUG: Fetching courses for instructor:", currentUser?._id);
         const response = await axios.get(getApiUrl('instructorCourses'), {
-          params: { instructorId: currentUser.uid }
+          params: { instructorId: currentUser._id }
         });
+        console.log("DEBUG: Fetched courses:", response.data);
         setCourses(response.data);
       } catch (err) {
         console.error('Error fetching courses:', err);
@@ -34,7 +36,7 @@ const Classes = () => {
       }
     };
 
-    if (currentUser?.uid) {
+    if (currentUser?._id) {
       fetchCourses();
     }
   }, [currentUser]);
@@ -42,17 +44,25 @@ const Classes = () => {
   const handleCreateCourse = async (e) => {
     e.preventDefault();
     try {
+      console.log("DEBUG: Creating course with data:", {
+        ...newCourse,
+        instructorId: currentUser._id,
+        instructorName: `${currentUser.firstName} ${currentUser.lastName}`.trim()
+      });
+
       const response = await axios.post(getApiUrl('courses'), {
         ...newCourse,
-        instructorId: currentUser.uid
+        instructorId: currentUser._id,
+        instructorName: `${currentUser.firstName} ${currentUser.lastName}`.trim()
       });
       
+      console.log("DEBUG: Course created successfully:", response.data);
       setCourses([...courses, response.data]);
       setShowCreateModal(false);
       setNewCourse({ name: '', description: '', code: '' });
     } catch (err) {
       console.error('Error creating course:', err);
-      alert('Failed to create course. Please try again.');
+      alert(err.response?.data?.error || 'Failed to create course. Please try again.');
     }
   };
 
