@@ -26,14 +26,23 @@ const Courses = () => {
         setIsLoading(true);
         setError(null);
         
-        // Get the student ID from the user's profile or use a default
-        const studentId = currentUser.profile?.studentId || 'student1';
+        // Get the email from the user's profile
+        const email = currentUser.email;
+        if (!email) {
+          throw new Error('User email not found');
+        }
+        
+        console.log('Fetching enrolled courses for email:', email);
         
         // Fetch enrolled courses
-        const enrolledResponse = await fetch(`${getApiUrl('enrolledCourses')}?studentId=${studentId}`);
+        const enrolledResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
+        
         if (!enrolledResponse.ok) {
-          throw new Error('Failed to fetch enrolled courses');
+          const errorData = await enrolledResponse.json().catch(() => ({}));
+          console.error('Error response:', errorData);
+          throw new Error(errorData.error || 'Failed to fetch enrolled courses');
         }
+        
         const enrolledData = await enrolledResponse.json();
         console.log('Enrolled courses data:', enrolledData);
         
@@ -56,7 +65,7 @@ const Courses = () => {
         }
       } catch (err) {
         console.error('Error fetching courses:', err);
-        setError('Failed to load courses. Please try again later.');
+        setError(err.message || 'Failed to load courses. Please try again later.');
       } finally {
         setIsLoading(false);
       }
@@ -70,7 +79,10 @@ const Courses = () => {
     if (!currentUser) return;
     
     try {
-      const studentId = currentUser.profile?.studentId || 'student1';
+      const email = currentUser.email;
+      if (!email) {
+        throw new Error('User email not found');
+      }
       
       // Fetch all courses
       const allCoursesResponse = await fetch(`${getApiUrl('courses')}`);
@@ -116,7 +128,10 @@ const Courses = () => {
     try {
       setEnrolling(true);
       
-      const studentId = currentUser.profile?.studentId || 'student1';
+      const email = currentUser.email;
+      if (!email) {
+        throw new Error('User email not found');
+      }
       
       // Enroll the student in the course
       const response = await fetch(`${getApiUrl('course')}/${courseId}/enroll`, {
@@ -125,9 +140,8 @@ const Courses = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          studentId,
-          name: currentUser.displayName || 'Student',
-          email: currentUser.email || ''
+          email,
+          name: currentUser.displayName || 'Student'
         })
       });
       

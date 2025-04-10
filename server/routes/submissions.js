@@ -60,16 +60,16 @@ router.post('/', async (req, res) => {
   try {
     const { 
       assignmentId, 
-      studentId, 
+      studentEmail, 
       courseId, 
       content, 
       fileIds, 
       submissionDate 
     } = req.body;
     
-    if (!assignmentId || !studentId || !courseId) {
+    if (!assignmentId || !studentEmail || !courseId) {
       return res.status(400).json({ 
-        error: 'Assignment ID, student ID, and course ID are required' 
+        error: 'Assignment ID, student email, and course ID are required' 
       });
     }
 
@@ -82,7 +82,7 @@ router.post('/', async (req, res) => {
     // Check if a submission already exists
     const existingSubmission = await Submission.findOne({
       assignmentId,
-      studentId
+      studentEmail: studentEmail.toLowerCase()
     });
 
     if (existingSubmission) {
@@ -98,7 +98,7 @@ router.post('/', async (req, res) => {
     // Create new submission
     const newSubmission = new Submission({
       assignmentId,
-      studentId,
+      studentEmail: studentEmail.toLowerCase(),
       courseId,
       content,
       fileIds: fileIds || [],

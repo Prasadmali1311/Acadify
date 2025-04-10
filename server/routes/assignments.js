@@ -19,14 +19,14 @@ router.get('/', async (req, res) => {
 // Get assignments for a specific student
 router.get('/student', async (req, res) => {
   try {
-    const { studentId } = req.query;
-    if (!studentId) {
-      return res.status(400).json({ error: 'Student ID is required' });
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
     }
 
     // Get courses the student is enrolled in
     const enrolledCourses = await Course.find({
-      'students.studentId': studentId
+      'students.email': email.toLowerCase()
     });
 
     if (!enrolledCourses || enrolledCourses.length === 0) {
@@ -47,7 +47,7 @@ router.get('/student', async (req, res) => {
 
     // Get submissions for these assignments
     const submissions = await Submission.find({
-      studentId,
+      studentEmail: email.toLowerCase(),
       assignmentId: { $in: assignments.map(a => a._id.toString()) }
     });
 

@@ -17,13 +17,16 @@ router.get('/', async (req, res) => {
 // Get enrolled courses for a student
 router.get('/enrolled', async (req, res) => {
   try {
-    const { studentId } = req.query;
-    if (!studentId) {
-      return res.status(400).json({ error: 'Student ID is required' });
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
     }
 
+    // Convert email to lowercase for consistent matching
+    const normalizedEmail = email.toLowerCase();
+    
     const courses = await Course.find({
-      'students.studentId': studentId
+      'students.email': normalizedEmail
     });
     
     res.status(200).json(courses);
@@ -78,10 +81,10 @@ router.post('/', async (req, res) => {
 router.post('/:courseId/enroll', async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { studentId, name, email } = req.body;
+    const { email, name } = req.body;
     
-    if (!studentId || !name || !email) {
-      return res.status(400).json({ error: 'Student ID, name, and email are required' });
+    if (!email || !name) {
+      return res.status(400).json({ error: 'Email and name are required' });
     }
 
     const course = await Course.findById(courseId);
@@ -89,13 +92,26 @@ router.post('/:courseId/enroll', async (req, res) => {
       return res.status(404).json({ error: 'Course not found' });
     }
 
+    // Convert email to lowercase for consistent matching
+    const normalizedEmail = email.toLowerCase();
+
     // Check if student is already enrolled
-    const alreadyEnrolled = course.students.some(student => student.studentId === studentId);
+    const alreadyEnrolled = course.students.some(student => 
+      student.email === normalizedEmail
+    );
     if (alreadyEnrolled) {
       return res.status(400).json({ error: 'Student already enrolled in this course' });
     }
 
-    course.students.push({ studentId, name, email });
+    // Add student to course
+    course.students.push({
+      email: normalizedEmail,
+      name,
+      enrolledAt: new Date(),
+      progress: 0,
+      status: 'active'
+    });
+
     await course.save();
     
     res.status(200).json({ message: 'Student enrolled successfully' });

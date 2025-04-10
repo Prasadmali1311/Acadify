@@ -5,9 +5,11 @@ const submissionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  studentId: {
+  studentEmail: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    lowercase: true
   },
   courseId: {
     type: String,

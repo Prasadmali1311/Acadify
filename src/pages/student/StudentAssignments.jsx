@@ -34,48 +34,45 @@ const StudentAssignments = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const studentId = currentUser?.profile?.studentId || 'student1';
+      const email = currentUser?.email;
+      if (!email) {
+        throw new Error('User email not found');
+      }
 
       // Fetch enrolled courses
-      const coursesResponse = await fetch(`${getApiUrl()}/courses/student?studentId=${studentId}`);
+      const coursesResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
       if (!coursesResponse.ok) {
         throw new Error('Failed to fetch courses');
       }
       const coursesData = await coursesResponse.json();
-      console.log('Fetched courses:', coursesData);
+      setCourses(coursesData);
 
       // Fetch assignments
-      const assignmentsResponse = await fetch(`${getApiUrl()}/assignments/student?studentId=${studentId}`);
+      const assignmentsResponse = await fetch(`${getApiUrl('studentAssignments')}?email=${encodeURIComponent(email)}`);
       if (!assignmentsResponse.ok) {
         throw new Error('Failed to fetch assignments');
       }
       const assignmentsData = await assignmentsResponse.json();
-      console.log('Fetched assignments:', assignmentsData);
-
-      // Format assignments with course names
-      const formattedAssignments = assignmentsData.map(assignment => {
-        const course = coursesData.find(c => c._id === assignment.courseId);
-        return {
-          ...assignment,
-          courseName: course?.name || 'Unknown Course',
-          instructorName: course?.instructorName || 'Unknown Instructor'
-        };
-      });
-
-      setCourses(coursesData);
-      setAssignments(formattedAssignments);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError('Failed to load assignments. Please try again later.');
+      setAssignments(assignmentsData);
+      
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError(err.message || 'Failed to load assignments');
+    } finally {
       setIsLoading(false);
     }
   };
   
   // Fetch student's assignments and courses
   useEffect(() => {
-    if (currentUser?.uid) {
+    if (currentUser?.email) {
+      console.log('Fetching data for email:', currentUser.email);
       fetchData();
+    } else {
+      console.log('No email found in currentUser:', currentUser);
+      setError('Please log in to view your assignments.');
+      setIsLoading(false);
     }
   }, [currentUser]);
 
@@ -139,7 +136,7 @@ const StudentAssignments = () => {
 
     try {
       setIsSubmitting(true);
-      const studentId = currentUser.profile?.studentId || 'student1';
+      const email = currentUser.email;
       
       // Upload files first if any
       const fileIds = [];
@@ -164,18 +161,21 @@ const StudentAssignments = () => {
         }
       }
 
-      // Create submission data
+      // Create submission data with the correct structure
       const submissionData = {
-        assignmentId: currentAssignment.id,
-        studentId: studentId,
+        assignmentId: currentAssignment._id,
+        studentEmail: email.toLowerCase(),
         courseId: currentAssignment.courseId,
         content: submissionText,
         fileIds: fileIds,
         submissionDate: new Date().toISOString()
       };
 
+      console.log('Debug - Submission Data:', submissionData);
+      console.log('Debug - Current Assignment:', currentAssignment);
+
       // Submit the assignment
-      await axios.post(getApiUrl('submissions'), submissionData);
+      const response = await axios.post(getApiUrl('submissions'), submissionData);
       
       // Close modal and reset states
       setShowSubmitModal(false);
@@ -191,7 +191,8 @@ const StudentAssignments = () => {
       }, 1500);
     } catch (err) {
       console.error('Error submitting assignment:', err);
-      alert('Failed to submit assignment. Please try again.');
+      console.error('Error details:', err.response?.data); // Log detailed error
+      alert(err.response?.data?.error || 'Failed to submit assignment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -255,7 +256,7 @@ const StudentAssignments = () => {
         <div className="assignment-cards">
           {filteredAssignments.length > 0 ? (
             filteredAssignments.map(assignment => (
-              <div key={assignment.id} className="assignment-card">
+              <div key={assignment._id} className="assignment-card">
                 <div className="assignment-header">
                   <h3>{assignment.title}</h3>
                   <span className={`status-badge ${assignment.status}`}>
@@ -266,25 +267,42 @@ const StudentAssignments = () => {
                   <p><strong>Course:</strong> {assignment.courseName}</p>
                   <p><strong>Instructor:</strong> {assignment.instructorName}</p>
                   <p><strong>Deadline:</strong> {new Date(assignment.deadline).toLocaleDateString()}</p>
-                  {getDaysIndicator(assignment.deadline)}
-                </div>
-                <div className="assignment-description">
-                  <p>{assignment.description}</p>
-                </div>
-                {assignment.status === 'pending' && (
-                  <button
-                    className="submit-button"
-                    onClick={() => handleOpenSubmitModal(assignment)}
-                  >
-                    Submit Assignment
-                  </button>
-                )}
-                {assignment.status === 'graded' && (
-                  <div className="grade-section">
+                  {assignment.submissionDate && (
+                    <p><strong>Submitted:</strong> {new Date(assignment.submissionDate).toLocaleDateString()}</p>
+                  )}
+                  {assignment.grade && (
                     <p><strong>Grade:</strong> {assignment.grade}</p>
-                    <p><strong>Feedback:</strong> {assignment.feedback}</p>
-                  </div>
-                )}
+                  )}
+                </div>
+                <div className="assignment-actions">
+                  {assignment.status === 'pending' && (
+                    <button 
+                      onClick={() => handleOpenSubmitModal(assignment)}
+                      className="submit-btn"
+                    >
+                      Submit Assignment
+                    </button>
+                  )}
+                  {assignment.status === 'submitted' && !assignment.grade && (
+                    <span className="submitted-badge">Submitted</span>
+                  )}
+                  {assignment.status === 'graded' && (
+                    <div className="grade-info">
+                      <span className="grade-badge">Grade: {assignment.grade}</span>
+                      {assignment.feedback && (
+                        <button 
+                          onClick={() => {
+                            setCurrentAssignment(assignment);
+                            setShowSubmitModal(true);
+                          }}
+                          className="view-feedback-btn"
+                        >
+                          View Feedback
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           ) : (
@@ -326,18 +344,15 @@ const StudentAssignments = () => {
                         <li key={file.name}>
                           <div className="file-info">
                             <span>{file.name}</span>
-                            <span className="file-size">
-                              {(file.size / 1024 / 1024).toFixed(2)} MB
-                            </span>
+                            {uploadProgress[file.name] !== undefined && (
+                              <div className="progress-bar">
+                                <div 
+                                  className="progress-fill" 
+                                  style={{ width: `${uploadProgress[file.name]}%` }}
+                                />
+                              </div>
+                            )}
                           </div>
-                          {uploadProgress[file.name] !== undefined && (
-                            <div className="progress-bar">
-                              <div
-                                className="progress"
-                                style={{ width: `${uploadProgress[file.name]}%` }}
-                              />
-                            </div>
-                          )}
                         </li>
                       ))}
                     </ul>
