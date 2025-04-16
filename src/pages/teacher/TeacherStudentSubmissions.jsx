@@ -11,6 +11,10 @@ const TeacherStudentSubmissions = () => {
   const [submissions, setSubmissions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [submissionFiles, setSubmissionFiles] = useState([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -53,7 +57,51 @@ const TeacherStudentSubmissions = () => {
     fetchSubmissions();
   }, [studentEmail, currentUser]);
 
-  // TODO: Implement grading functionality if needed
+  // Function to handle viewing files of a submission
+  const handleViewFiles = async (submission) => {
+    try {
+      setLoadingFiles(true);
+      setSelectedSubmission(submission);
+      setShowFileModal(true);
+      
+      if (!submission.fileIds || submission.fileIds.length === 0) {
+        setSubmissionFiles([]);
+        return;
+      }
+      
+      // Fetch file details based on fileIds
+      const token = localStorage.getItem('token');
+      const promises = submission.fileIds.map(fileId => 
+        axios.get(`${getApiUrl('files')}/id/${fileId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      );
+      
+      const responses = await Promise.all(promises);
+      const files = responses.map(response => response.data);
+      setSubmissionFiles(files);
+    } catch (err) {
+      console.error('Error fetching submission files:', err);
+      alert('Failed to load files for this submission.');
+    } finally {
+      setLoadingFiles(false);
+    }
+  };
+  
+  // Function to open a file in a new tab
+  const openFile = (filename) => {
+    const fileUrl = `${getApiUrl('file')}/${filename}`;
+    window.open(fileUrl, '_blank');
+  };
+  
+  // Close the file modal
+  const closeFileModal = () => {
+    setShowFileModal(false);
+    setSelectedSubmission(null);
+    setSubmissionFiles([]);
+  };
+
+  // Implement grading functionality if needed
   const handleGradeSubmission = (submissionId) => {
     console.log('Grading submission:', submissionId);
     // Add logic to open grading modal or navigate to grading page
@@ -88,8 +136,7 @@ const TeacherStudentSubmissions = () => {
                   <td>{new Date(sub.submissionDate).toLocaleString()}</td>
                   <td>{sub.grade ? 'Graded' : 'Submitted'}</td>
                   <td>{sub.grade || '-'}</td>
-                  <td>
-                    {/* Add View/Grade button here */} 
+                  <td className="action-buttons">
                     <button 
                       onClick={() => handleGradeSubmission(sub._id)}
                       className="grade-button"
@@ -97,7 +144,13 @@ const TeacherStudentSubmissions = () => {
                     >
                       {sub.grade ? 'View Grade' : 'Grade'}
                     </button>
-                    {/* Link to view submission details could go here */}
+                    
+                    <button 
+                      onClick={() => handleViewFiles(sub)}
+                      className="view-files-button"
+                    >
+                      View Files
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -106,6 +159,53 @@ const TeacherStudentSubmissions = () => {
         ) : (
           <p>No submissions found for this student in your courses.</p>
         )
+      )}
+      
+      {/* File Viewing Modal */}
+      {showFileModal && (
+        <div className="modal-overlay">
+          <div className="modal-content file-modal">
+            <div className="modal-header">
+              <h2>Submission Files</h2>
+              <button className="close-button" onClick={closeFileModal}>&times;</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="submission-details">
+                <p><strong>Assignment:</strong> {selectedSubmission?.assignmentTitle}</p>
+                <p><strong>Course:</strong> {selectedSubmission?.courseName}</p>
+                <p><strong>Submitted:</strong> {new Date(selectedSubmission?.submissionDate).toLocaleString()}</p>
+                <p><strong>Content:</strong> {selectedSubmission?.content || 'No content provided'}</p>
+              </div>
+              
+              <h3>Attached Files</h3>
+              
+              {loadingFiles ? (
+                <p>Loading files...</p>
+              ) : submissionFiles.length > 0 ? (
+                <div className="file-list">
+                  {submissionFiles.map(file => (
+                    <div key={file._id} className="file-item">
+                      <span className="file-name">{file.metadata?.originalName || file.filename}</span>
+                      <button 
+                        onClick={() => openFile(file.filename)}
+                        className="view-button"
+                      >
+                        View File
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>No files attached to this submission.</p>
+              )}
+            </div>
+            
+            <div className="modal-footer">
+              <button onClick={closeFileModal} className="close-modal-button">Close</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { bucket } from '../db.js';
 import path from 'path';
 import crypto from 'crypto';
 import { Readable } from 'stream';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -179,6 +180,40 @@ router.get('/files/user/:email', async (req, res) => {
     } catch (error) {
         console.error('Error listing user files:', error);
         res.status(500).json({ error: 'Error listing user files' });
+    }
+});
+
+// Get file by ID
+router.get('/files/id/:fileId', async (req, res) => {
+    try {
+        const fileId = req.params.fileId;
+        
+        // Convert string to ObjectId
+        const ObjectId = mongoose.Types.ObjectId;
+        const fileObjectId = new ObjectId(fileId);
+        
+        // Find file by ID
+        const file = await bucket.find({ _id: fileObjectId }).toArray();
+        
+        if (!file || file.length === 0) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+        
+        const fileData = file[0];
+        const fileInfo = {
+            _id: fileData._id,
+            filename: fileData.filename,
+            originalName: fileData.metadata?.originalName,
+            contentType: fileData.contentType,
+            length: fileData.length,
+            uploadDate: fileData.uploadDate,
+            metadata: fileData.metadata
+        };
+        
+        res.status(200).json(fileInfo);
+    } catch (error) {
+        console.error('Error getting file by ID:', error);
+        res.status(500).json({ error: 'Error retrieving file details' });
     }
 });
 

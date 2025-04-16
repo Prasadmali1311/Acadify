@@ -415,18 +415,6 @@ const StudentAssignments = () => {
                     </ul>
                   </div>
                 )}
-                {uploadedFiles.length > 0 && (
-                  <div className="upload-actions">
-                    <button 
-                      type="button" 
-                      className="upload-btn"
-                      onClick={handleUploadFiles}
-                      disabled={isUploading || fileIds.length > 0}
-                    >
-                      {isUploading ? 'Uploading...' : fileIds.length > 0 ? 'Files Uploaded' : 'Upload Selected Files'}
-                    </button>
-                  </div>
-                )}
               </div>
               <div className="form-actions">
                 <button
