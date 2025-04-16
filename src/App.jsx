@@ -18,6 +18,7 @@ import TeacherClasses from './pages/teacher/Classes';
 import TeacherStudents from './pages/teacher/Students';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import TeacherAssignments from './pages/teacher/TeacherAssignments';
+import TeacherStudentSubmissions from './pages/teacher/TeacherStudentSubmissions';
 
 // Common pages
 import Settings from './pages/Settings';
@@ -57,6 +58,7 @@ function App() {
                 <Route path="dashboard" element={<TeacherDashboard />} />
                 <Route path="classes" element={<TeacherClasses />} />
                 <Route path="students" element={<TeacherStudents />} />
+                <Route path="students/:studentEmail/submissions" element={<TeacherStudentSubmissions />} />
                 <Route path="profile" element={<TeacherProfile />} />
                 <Route path="assignments" element={<TeacherAssignments />} />
               </Route>

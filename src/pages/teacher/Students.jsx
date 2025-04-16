@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getApiUrl } from '../../config/database';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './Students.css';
 
 const Students = () => {
@@ -9,6 +10,7 @@ const Students = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (authLoading) {
@@ -70,6 +72,10 @@ const Students = () => {
     fetchStudents();
   }, [currentUser, authLoading]);
 
+  const handleStudentClick = (email) => {
+    navigate(`/teacher/students/${encodeURIComponent(email)}/submissions`);
+  };
+
   const displayLoading = isLoading || authLoading;
 
   return (
@@ -89,7 +95,11 @@ const Students = () => {
             </thead>
             <tbody>
               {students.map(student => (
-                <tr key={student.email}>
+                <tr 
+                  key={student.email} 
+                  onClick={() => handleStudentClick(student.email)}
+                  className="student-row"
+                >
                   <td>{student.name || 'N/A'}</td>
                   <td>{student.email}</td>
                   <td>{student.courses.join(', ')}</td> 

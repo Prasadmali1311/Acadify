@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 
 const submissionSchema = new mongoose.Schema({
   assignmentId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Assignment',
     required: true
   },
   studentEmail: {

@@ -51,9 +51,20 @@ router.get('/student', async (req, res) => {
       assignmentId: { $in: assignments.map(a => a._id.toString()) }
     });
 
+    console.log(`[ASSIGNMENTS /student] Found ${submissions.length} submissions for student ${email}`);
+
     // Map submissions to assignments
     const assignmentsWithSubmissions = assignments.map(assignment => {
-      const submission = submissions.find(s => s.assignmentId === assignment._id.toString());
+      // Explicitly compare ObjectId strings
+      const assignmentIdString = assignment._id.toString();
+      const submission = submissions.find(s => s.assignmentId.toString() === assignmentIdString);
+      
+      // Log the matching process for debugging
+      console.log(`[ASSIGNMENTS /student] Mapping assignment ${assignmentIdString}. Found submission: ${submission ? submission._id : 'None'}`);
+      
+      const status = submission ? (submission.grade ? 'graded' : 'submitted') : 'pending';
+      console.log(`[ASSIGNMENTS /student] Assignment ${assignmentIdString} status set to: ${status}`);
+
       return {
         _id: assignment._id,
         title: assignment.title,
@@ -63,7 +74,7 @@ router.get('/student', async (req, res) => {
         instructorId: assignment.instructorId,
         instructorName: assignment.instructorName,
         deadline: assignment.deadline,
-        status: submission ? (submission.grade ? 'graded' : 'submitted') : 'pending',
+        status: status, // Use the determined status
         submissionDate: submission?.submissionDate,
         grade: submission?.grade,
         feedback: submission?.feedback,
@@ -71,6 +82,7 @@ router.get('/student', async (req, res) => {
       };
     });
 
+    console.log(`[ASSIGNMENTS /student] Sending response with ${assignmentsWithSubmissions.length} assignments.`);
     res.status(200).json(assignmentsWithSubmissions);
   } catch (error) {
     console.error('Error fetching student assignments:', error);

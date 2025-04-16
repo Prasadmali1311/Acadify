@@ -1,0 +1,84 @@
+.student-submissions-container {
+  padding: 2rem;
+  background-color: #f9f9f9;
+  min-height: calc(100vh - 60px); /* Adjust based on header height */
+}
+
+.student-submissions-container h1 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.error-message {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.submissions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden; /* Ensures border-radius applies to corners */
+}
+
+.submissions-table th,
+.submissions-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.submissions-table th {
+  background-color: #f1f3f5;
+  font-weight: 600;
+  color: #495057;
+}
+
+.submissions-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.submissions-table td:last-child {
+  text-align: center;
+}
+
+.grade-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease;
+}
+
+.grade-button:hover {
+  background-color: #0056b3;
+}
+
+.grade-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.7;
+} 

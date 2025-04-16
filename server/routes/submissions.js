@@ -1,4 +1,5 @@
 import express from 'express';
+import jwt from 'jsonwebtoken'; // Import jsonwebtoken
 import Submission from '../models/Submission.js';
 import Assignment from '../models/Assignment.js';
 
@@ -52,6 +53,84 @@ router.get('/instructor', async (req, res) => {
   } catch (error) {
     console.error('Error fetching instructor submissions:', error);
     res.status(500).json({ error: 'Error fetching instructor submissions' });
+  }
+});
+
+// Get submissions for a specific student from a specific teacher's perspective
+router.get('/teacher/student/:studentEmail', async (req, res) => {
+  console.log(`[SUBMISSIONS] GET /teacher/student/${req.params.studentEmail} - Request received`);
+  try {
+    // 1. Authentication & Authorization
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Authentication required: No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    let teacherId;
+    try {
+      // eslint-disable-next-line no-undef
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      teacherId = decoded.id;
+      console.log(`[SUBMISSIONS] Authenticated Teacher ID: ${teacherId}`);
+    } catch (err) {
+      console.error('JWT Verification Error:', err.message);
+      return res.status(401).json({ error: 'Authentication failed: Invalid token' });
+    }
+    
+    if (!teacherId) {
+      // This case should ideally be caught by jwt.verify, but as a safeguard
+      return res.status(401).json({ error: 'Authentication failed: Teacher ID not found in token' });
+    }
+
+    // 2. Get studentEmail from URL parameters
+    const { studentEmail } = req.params;
+    if (!studentEmail) {
+      return res.status(400).json({ error: 'Student Email is required in URL path' });
+    }
+    const lowerCaseStudentEmail = studentEmail.toLowerCase();
+    console.log(`[SUBMISSIONS] Searching for student: ${lowerCaseStudentEmail}`);
+
+    // 3. Find assignments created by this teacher
+    console.log(`[SUBMISSIONS] Finding assignments for instructorId: ${teacherId}`);
+    const teacherAssignments = await Assignment.find({ instructorId: teacherId });
+    const assignmentIds = teacherAssignments.map(assignment => assignment._id.toString());
+    console.log(`[SUBMISSIONS] Found ${assignmentIds.length} assignment IDs for teacher:`, assignmentIds);
+
+    if (assignmentIds.length === 0) {
+      console.log(`[SUBMISSIONS] No assignments found for teacher. Returning empty array.`);
+      return res.status(200).json([]); // No assignments means no relevant submissions
+    }
+
+    // 4. Find submissions by the student for only those assignments
+    console.log(`[SUBMISSIONS] Finding submissions for studentEmail: ${lowerCaseStudentEmail} and assignmentIds:`, assignmentIds);
+    const studentSubmissions = await Submission.find({
+      studentEmail: lowerCaseStudentEmail,
+      assignmentId: { $in: assignmentIds }
+    }).populate('assignmentId', 'title courseName'); // Populate assignment details
+    console.log(`[SUBMISSIONS] Found ${studentSubmissions.length} submissions matching criteria.`);
+
+    // 5. Format the response
+    const formattedSubmissions = studentSubmissions.map(sub => ({
+        _id: sub._id,
+        studentEmail: sub.studentEmail,
+        content: sub.content,
+        fileIds: sub.fileIds,
+        submissionDate: sub.submissionDate,
+        grade: sub.grade,
+        feedback: sub.feedback,
+        gradedDate: sub.gradedDate,
+        assignmentTitle: sub.assignmentId?.title || 'N/A',
+        courseName: sub.assignmentId?.courseName || 'N/A',
+        assignmentId: sub.assignmentId?._id
+    }));
+
+    res.status(200).json(formattedSubmissions);
+
+  } catch (error) {
+    console.error('Error fetching teacher-view student submissions:', error);
+    // Avoid sending detailed internal errors to client in production
+    res.status(500).json({ error: 'Server error fetching student submissions' }); 
   }
 });
 

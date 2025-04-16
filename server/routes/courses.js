@@ -24,7 +24,7 @@ router.get('/enrolled', async (req, res) => {
 
     // Convert email to lowercase for consistent matching
     const normalizedEmail = email.toLowerCase();
-    
+
     const courses = await Course.find({
       'students.email': normalizedEmail
     });

@@ -1,9 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useReducer } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import { getApiUrl } from '../../config/database';
 import './StudentAssignments.css';
+
+// Reducer for force update
+const forceUpdateReducer = (state) => state + 1;
 
 const StudentAssignments = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -13,25 +16,98 @@ const StudentAssignments = () => {
   const [submissionText, setSubmissionText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
-  const [renderKey, setRenderKey] = useState(0);
+  const [renderKey, forceUpdate] = useReducer(forceUpdateReducer, 0);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
+  const [fileIds, setFileIds] = useState([]);
   
   // Get current user
   const { currentUser } = useAuth();
   
   // State for assignments and courses
   const [assignments, setAssignments] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const [allCourses, setAllCourses] = useState([]);
 
-  // Force component to update
-  const forceUpdate = useCallback(() => {
-    setRenderKey(prevKey => prevKey + 1);
-  }, []);
+  // Function to handle file uploads
+  const handleUploadFiles = async () => {
+    if (uploadedFiles.length === 0) return;
+    
+    try {
+      setIsUploading(true);
+      const ids = [];
+      
+      // Upload each file and track progress
+      for (const fileObj of uploadedFiles) {
+        const formData = new FormData();
+        formData.append('file', fileObj.file);
+        formData.append('userEmail', currentUser.email); // Add user email to track who uploaded the file
+        
+        const response = await axios.post(getApiUrl('upload'), formData, {
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(prev => ({
+              ...prev,
+              [fileObj.name]: progress
+            }));
+          }
+        });
+        
+        if (response.data && response.data.fileId) {
+          ids.push(response.data.fileId);
+        }
+      }
+      
+      // Update fileIds state with the uploaded file IDs
+      setFileIds(ids);
+      alert(`Successfully uploaded ${ids.length} file(s)`);
+    } catch (err) {
+      console.error('Error uploading files:', err);
+      alert('Failed to upload files. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-  // Function to fetch data
+  // Fetch student's assignments and courses for filters
+  useEffect(() => {
+    const fetchDataAndCourses = async () => {
+      if (currentUser?.email) {
+        console.log('[EFFECT] Fetching data for email:', currentUser.email);
+        setIsLoading(true); // Start loading before fetches
+        try {
+          // Fetch Courses for filter dropdown
+          const coursesResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(currentUser.email)}`);
+          if (!coursesResponse.ok) {
+            throw new Error('Failed to fetch courses for filters');
+          }
+          const coursesData = await coursesResponse.json();
+          setAllCourses(coursesData); // Set courses for filter
+          console.log('[EFFECT] Fetched courses for filter:', coursesData);
+
+          // Fetch Assignments (using the separate fetchData function)
+          await fetchData(); 
+          
+          setError(null); // Clear error after successful fetches
+        } catch (err) {
+          console.error('[EFFECT] Error fetching initial data:', err);
+          setError(err.message || 'Failed to load initial data');
+        } finally {
+           // Loading state is handled within fetchData
+        }
+      } else {
+        console.log('[EFFECT] No email found in currentUser:', currentUser);
+        setError('Please log in to view your assignments.');
+        setIsLoading(false); // Ensure loading stops if no user
+      }
+    };
+    fetchDataAndCourses();
+  }, [currentUser]); // Depend only on currentUser
+
+  // Function to fetch assignments data (called by effect and after submit)
   const fetchData = async () => {
+    console.log(`[FETCH_DATA] Starting fetch for email: ${currentUser?.email}`);
     try {
       setIsLoading(true);
       const email = currentUser?.email;
@@ -39,21 +115,24 @@ const StudentAssignments = () => {
         throw new Error('User email not found');
       }
 
-      // Fetch enrolled courses
-      const coursesResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
-      if (!coursesResponse.ok) {
-        throw new Error('Failed to fetch courses');
-      }
-      const coursesData = await coursesResponse.json();
-      setCourses(coursesData);
+      // Fetch enrolled courses (Not strictly needed for status, but might be useful context)
+      // const coursesResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
+      // if (!coursesResponse.ok) {
+      //   throw new Error('Failed to fetch courses');
+      // }
+      // const coursesData = await coursesResponse.json();
+      // setCourses(coursesData);
+      // console.log(`[FETCH_DATA] Fetched courses:`, coursesData);
 
       // Fetch assignments
+      console.log(`[FETCH_DATA] Fetching assignments from: ${getApiUrl('studentAssignments')}?email=${encodeURIComponent(email)}`);
       const assignmentsResponse = await fetch(`${getApiUrl('studentAssignments')}?email=${encodeURIComponent(email)}`);
       if (!assignmentsResponse.ok) {
         throw new Error('Failed to fetch assignments');
       }
       const assignmentsData = await assignmentsResponse.json();
-      setAssignments(assignmentsData);
+      console.log(`[FETCH_DATA] Received assignments data from backend:`, JSON.stringify(assignmentsData, null, 2)); // Log the raw data
+      setAssignments(assignmentsData); // Update state
       
       setError(null);
     } catch (err) {
@@ -61,34 +140,7 @@ const StudentAssignments = () => {
       setError(err.message || 'Failed to load assignments');
     } finally {
       setIsLoading(false);
-    }
-  };
-  
-  // Fetch student's assignments and courses
-  useEffect(() => {
-    if (currentUser?.email) {
-      console.log('Fetching data for email:', currentUser.email);
-      fetchData();
-    } else {
-      console.log('No email found in currentUser:', currentUser);
-      setError('Please log in to view your assignments.');
-      setIsLoading(false);
-    }
-  }, [currentUser]);
-
-  // Calculate days left or overdue
-  const getDaysIndicator = (deadline) => {
-    const today = new Date();
-    const deadlineDate = new Date(deadline);
-    const diffTime = deadlineDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) {
-      return <span className="overdue">{Math.abs(diffDays)} days overdue</span>;
-    } else if (diffDays === 0) {
-      return <span className="due-today">Due today</span>;
-    } else {
-      return <span className="days-left">{diffDays} days left</span>;
+      console.log(`[FETCH_DATA] Fetch finished.`);
     }
   };
 
@@ -127,6 +179,7 @@ const StudentAssignments = () => {
     setShowSubmitModal(true);
     setUploadedFiles([]);
     setSubmissionText('');
+    setFileIds([]);
   };
 
   // Handle submitting an assignment
@@ -138,12 +191,14 @@ const StudentAssignments = () => {
       setIsSubmitting(true);
       const email = currentUser.email;
       
-      // Upload files first if any
-      const fileIds = [];
-      if (uploadedFiles.length > 0) {
+      // Upload files first if any and they haven't been uploaded yet
+      let submissionFileIds = [...fileIds]; // Use already uploaded files
+      
+      if (uploadedFiles.length > 0 && fileIds.length === 0) {
         for (const fileObj of uploadedFiles) {
           const formData = new FormData();
           formData.append('file', fileObj.file);
+          formData.append('userEmail', email); // Add user email to track who uploaded the file
           
           const response = await axios.post(getApiUrl('upload'), formData, {
             onUploadProgress: (progressEvent) => {
@@ -156,7 +211,7 @@ const StudentAssignments = () => {
           });
           
           if (response.data && response.data.fileId) {
-            fileIds.push(response.data.fileId);
+            submissionFileIds.push(response.data.fileId);
           }
         }
       }
@@ -167,7 +222,7 @@ const StudentAssignments = () => {
         studentEmail: email.toLowerCase(),
         courseId: currentAssignment.courseId,
         content: submissionText,
-        fileIds: fileIds,
+        fileIds: submissionFileIds,
         submissionDate: new Date().toISOString()
       };
 
@@ -175,7 +230,7 @@ const StudentAssignments = () => {
       console.log('Debug - Current Assignment:', currentAssignment);
 
       // Submit the assignment
-      const response = await axios.post(getApiUrl('submissions'), submissionData);
+      await axios.post(getApiUrl('submissions'), submissionData);
       
       // Close modal and reset states
       setShowSubmitModal(false);
@@ -183,12 +238,14 @@ const StudentAssignments = () => {
       setUploadedFiles([]);
       setSubmissionText('');
       setUploadProgress({});
+      setFileIds([]);
       
       // Refresh assignments
       setTimeout(async () => {
         await fetchData();
         alert('Assignment submitted successfully!');
       }, 1500);
+      
     } catch (err) {
       console.error('Error submitting assignment:', err);
       console.error('Error details:', err.response?.data); // Log detailed error
@@ -227,7 +284,7 @@ const StudentAssignments = () => {
             className="filter-select"
           >
             <option value="all">All Classes</option>
-            {courses.map(course => (
+            {allCourses.map(course => (
               <option key={course._id} value={course.name}>
                 {course.name}
               </option>
@@ -356,6 +413,18 @@ const StudentAssignments = () => {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+                {uploadedFiles.length > 0 && (
+                  <div className="upload-actions">
+                    <button 
+                      type="button" 
+                      className="upload-btn"
+                      onClick={handleUploadFiles}
+                      disabled={isUploading || fileIds.length > 0}
+                    >
+                      {isUploading ? 'Uploading...' : fileIds.length > 0 ? 'Files Uploaded' : 'Upload Selected Files'}
+                    </button>
                   </div>
                 )}
               </div>
