@@ -78,10 +78,22 @@ const TeacherAssignments = () => {
       console.log("DEBUG: Fetched Assignments:", assignmentsResponse.data);
       
       // Format assignments for UI
-      const formattedAssignments = assignmentsResponse.data.map(assignment => {
-        // Calculate submission stats (in a real app, this would come from your backend)
-        const totalStudents = Math.floor(Math.random() * 30) + 10; // Random for demo
-        const submissions = Math.floor(Math.random() * totalStudents);
+      const formattedAssignments = await Promise.all(assignmentsResponse.data.map(async assignment => {
+        // Fetch real submission stats from the backend
+        let totalStudents = 0;
+        let submissions = 0;
+        
+        try {
+          const statsResponse = await axios.get(`${getApiUrl('assignment')}/${assignment._id}/stats`);
+          totalStudents = statsResponse.data.totalStudents;
+          submissions = statsResponse.data.submissions;
+          console.log(`DEBUG: Fetched stats for assignment ${assignment._id}:`, statsResponse.data);
+        } catch (err) {
+          console.error(`Error fetching stats for assignment ${assignment._id}:`, err);
+          // Fallback to defaults
+          totalStudents = 0;
+          submissions = 0;
+        }
         
         return {
           id: assignment._id,
@@ -94,7 +106,7 @@ const TeacherAssignments = () => {
           submissions,
           totalStudents
         };
-      });
+      }));
       
       console.log("DEBUG: Formatted Assignments:", formattedAssignments);
       console.log("DEBUG: Setting assignments state with count:", formattedAssignments.length);

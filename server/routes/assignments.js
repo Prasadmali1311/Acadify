@@ -143,4 +143,41 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Get assignment stats
+router.get('/:assignmentId/stats', async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    
+    // Find the assignment to get the courseId
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+    
+    // Find the course to count enrolled students
+    const course = await Course.findById(assignment.courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+    
+    // Count enrolled students
+    const totalStudents = course.students ? course.students.length : 0;
+    
+    // Count submissions for this assignment
+    const submissions = await Submission.countDocuments({ assignmentId });
+    
+    // Return the statistics
+    res.status(200).json({
+      totalStudents,
+      submissions,
+      submissionRate: totalStudents > 0 ? (submissions / totalStudents) * 100 : 0,
+      assignmentTitle: assignment.title,
+      courseName: assignment.courseName
+    });
+  } catch (error) {
+    console.error('Error fetching assignment stats:', error);
+    res.status(500).json({ error: 'Error fetching assignment statistics' });
+  }
+});
+
 export default router; 

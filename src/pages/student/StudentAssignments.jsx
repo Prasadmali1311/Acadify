@@ -78,10 +78,16 @@ const StudentAssignments = () => {
         setIsLoading(true); // Start loading before fetches
         try {
           // Fetch Courses for filter dropdown
+          console.log(`[EFFECT] Attempting to fetch courses from: ${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(currentUser.email)}`);
           const coursesResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(currentUser.email)}`);
+          
+          console.log('[EFFECT] Courses response status:', coursesResponse.status);
           if (!coursesResponse.ok) {
-            throw new Error('Failed to fetch courses for filters');
+            const errorText = await coursesResponse.text();
+            console.error('[EFFECT] Courses response error text:', errorText);
+            throw new Error(`Failed to fetch courses: ${coursesResponse.status} ${errorText}`);
           }
+          
           const coursesData = await coursesResponse.json();
           setAllCourses(coursesData); // Set courses for filter
           console.log('[EFFECT] Fetched courses for filter:', coursesData);
@@ -332,18 +338,18 @@ const StudentAssignments = () => {
                   )}
                 </div>
                 <div className="assignment-actions">
-                  {assignment.status === 'pending' && (
-                    <button 
-                      onClick={() => handleOpenSubmitModal(assignment)}
+                {assignment.status === 'pending' && (
+                  <button
+                    onClick={() => handleOpenSubmitModal(assignment)}
                       className="submit-btn"
-                    >
-                      Submit Assignment
-                    </button>
-                  )}
+                  >
+                    Submit Assignment
+                  </button>
+                )}
                   {assignment.status === 'submitted' && !assignment.grade && (
                     <span className="submitted-badge">Submitted</span>
                   )}
-                  {assignment.status === 'graded' && (
+                {assignment.status === 'graded' && (
                     <div className="grade-info">
                       <span className="grade-badge">Grade: {assignment.grade}</span>
                       {assignment.feedback && (
@@ -357,8 +363,8 @@ const StudentAssignments = () => {
                           View Feedback
                         </button>
                       )}
-                    </div>
-                  )}
+                  </div>
+                )}
                 </div>
               </div>
             ))
@@ -401,14 +407,14 @@ const StudentAssignments = () => {
                         <li key={file.name}>
                           <div className="file-info">
                             <span>{file.name}</span>
-                            {uploadProgress[file.name] !== undefined && (
-                              <div className="progress-bar">
-                                <div 
+                          {uploadProgress[file.name] !== undefined && (
+                            <div className="progress-bar">
+                              <div
                                   className="progress-fill" 
-                                  style={{ width: `${uploadProgress[file.name]}%` }}
-                                />
-                              </div>
-                            )}
+                                style={{ width: `${uploadProgress[file.name]}%` }}
+                              />
+                            </div>
+                          )}
                           </div>
                         </li>
                       ))}

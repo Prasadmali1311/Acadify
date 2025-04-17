@@ -36,10 +36,10 @@ const Header = () => {
   const getUserInitials = () => {
     if (!currentUser) return 'U';
     
-    // If we have profile data with first and last name
-    if (currentUser.profile && currentUser.profile.firstName && currentUser.profile.lastName) {
-      const firstInitial = currentUser.profile.firstName.charAt(0).toUpperCase();
-      const lastInitial = currentUser.profile.lastName.charAt(0).toUpperCase();
+    // If user has first and last name
+    if (currentUser.firstName && currentUser.lastName) {
+      const firstInitial = currentUser.firstName.charAt(0).toUpperCase();
+      const lastInitial = currentUser.lastName.charAt(0).toUpperCase();
       return `${firstInitial}${lastInitial}`;
     }
     
@@ -55,14 +55,9 @@ const Header = () => {
   const getUserDisplayName = () => {
     if (!currentUser) return 'User';
     
-    // If we have profile data with first and last name
-    if (currentUser.profile && currentUser.profile.firstName && currentUser.profile.lastName) {
-      return `${currentUser.profile.firstName} ${currentUser.profile.lastName}`;
-    }
-    
-    // If we have a display name from Google
-    if (currentUser.profile && currentUser.profile.displayName) {
-      return currentUser.profile.displayName;
+    // If user has first and last name
+    if (currentUser.firstName && currentUser.lastName) {
+      return `${currentUser.firstName} ${currentUser.lastName}`;
     }
     
     // If we have a display name directly on the user object
@@ -78,19 +73,18 @@ const Header = () => {
   const hasProfilePhoto = () => {
     // Debug logs
     console.log('Current User:', currentUser);
-    console.log('Photo URL (direct):', currentUser?.photoURL);
-    console.log('Photo URL (profile):', currentUser?.profile?.photoURL);
+    console.log('Photo URL:', currentUser?.photoURL);
     
-    // Check both possible locations for the photo URL
-    const hasPhoto = currentUser?.photoURL || currentUser?.profile?.photoURL ? true : false;
+    // Check if photo URL exists
+    const hasPhoto = currentUser?.photoURL ? true : false;
     console.log('Has profile photo:', hasPhoto);
     return hasPhoto;
   };
 
   // Get profile photo URL
   const getProfilePhotoUrl = () => {
-    // Try to get the photo URL from both possible locations
-    const photoUrl = currentUser?.photoURL || currentUser?.profile?.photoURL || '';
+    // Get the photo URL
+    const photoUrl = currentUser?.photoURL || '';
     console.log('Using photo URL:', photoUrl);
     return photoUrl;
   };

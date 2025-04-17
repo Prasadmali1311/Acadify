@@ -5,6 +5,16 @@ import { getApiUrl } from '../../config/database'; // Corrected path
 import axios from 'axios';
 import './TeacherStudentSubmissions.css'; // We'll create this later
 
+// Function to format file size
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 Bytes';
+  
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  
+  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+};
+
 const TeacherStudentSubmissions = () => {
   const { studentEmail } = useParams(); // Get student email from URL
   const { currentUser } = useAuth(); // Needed for auth token
@@ -15,6 +25,11 @@ const TeacherStudentSubmissions = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [submissionFiles, setSubmissionFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
+  const [showGradeModal, setShowGradeModal] = useState(false);
+  const [gradeValue, setGradeValue] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [isGrading, setIsGrading] = useState(false);
+  const [gradeError, setGradeError] = useState(null);
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -101,10 +116,82 @@ const TeacherStudentSubmissions = () => {
     setSubmissionFiles([]);
   };
 
-  // Implement grading functionality if needed
-  const handleGradeSubmission = (submissionId) => {
-    console.log('Grading submission:', submissionId);
-    // Add logic to open grading modal or navigate to grading page
+  // Open grading modal
+  const handleGradeSubmission = (submission) => {
+    setSelectedSubmission(submission);
+    setGradeValue('');
+    setFeedback('');
+    setGradeError(null);
+    setShowGradeModal(true);
+  };
+
+  // Close grading modal
+  const closeGradeModal = () => {
+    setShowGradeModal(false);
+    setSelectedSubmission(null);
+    setGradeValue('');
+    setFeedback('');
+    setGradeError(null);
+  };
+
+  // Submit grade
+  const submitGrade = async (e) => {
+    e.preventDefault();
+    
+    if (!gradeValue) {
+      setGradeError('Please provide a grade.');
+      return;
+    }
+    
+    try {
+      setIsGrading(true);
+      setGradeError(null);
+      
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${getApiUrl('submissions')}/${selectedSubmission._id}/grade`,
+        {
+          grade: gradeValue,
+          feedback: feedback
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.status === 200) {
+        // Update the submission in the local state
+        const updatedSubmissions = submissions.map(sub => 
+          sub._id === selectedSubmission._id 
+            ? { ...sub, grade: gradeValue, feedback: feedback }
+            : sub
+        );
+        
+        setSubmissions(updatedSubmissions);
+        closeGradeModal();
+        
+        // Show success message
+        alert('Submission graded successfully!');
+      } else {
+        throw new Error(response.data.error || 'Failed to grade submission');
+      }
+    } catch (err) {
+      console.error('Error grading submission:', err);
+      setGradeError(err.message || 'Failed to grade submission. Please try again.');
+    } finally {
+      setIsGrading(false);
+    }
+  };
+
+  // View grade details
+  const handleViewGrade = (submission) => {
+    setSelectedSubmission(submission);
+    setGradeValue(submission.grade || '');
+    setFeedback(submission.feedback || '');
+    setShowGradeModal(true);
   };
 
   return (
@@ -138,9 +225,8 @@ const TeacherStudentSubmissions = () => {
                   <td>{sub.grade || '-'}</td>
                   <td className="action-buttons">
                     <button 
-                      onClick={() => handleGradeSubmission(sub._id)}
+                      onClick={() => sub.grade ? handleViewGrade(sub) : handleGradeSubmission(sub)}
                       className="grade-button"
-                      disabled={!!sub.grade} // Disable if already graded
                     >
                       {sub.grade ? 'View Grade' : 'Grade'}
                     </button>
@@ -186,7 +272,10 @@ const TeacherStudentSubmissions = () => {
                 <div className="file-list">
                   {submissionFiles.map(file => (
                     <div key={file._id} className="file-item">
-                      <span className="file-name">{file.metadata?.originalName || file.filename}</span>
+                      <div className="file-details">
+                        <span className="file-name">{file.metadata?.originalName || file.filename}</span>
+                        <small>Size: {formatFileSize(file.size)}</small>
+                      </div>
                       <button 
                         onClick={() => openFile(file.filename)}
                         className="view-button"
@@ -204,6 +293,79 @@ const TeacherStudentSubmissions = () => {
             <div className="modal-footer">
               <button onClick={closeFileModal} className="close-modal-button">Close</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grading Modal */}
+      {showGradeModal && (
+        <div className="modal-overlay">
+          <div className="modal-content grade-modal">
+            <div className="modal-header">
+              <h2>{selectedSubmission?.grade ? 'View Grade' : 'Grade Submission'}</h2>
+              <button className="close-button" onClick={closeGradeModal}>&times;</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="submission-details">
+                <p><strong>Assignment:</strong> {selectedSubmission?.assignmentTitle}</p>
+                <p><strong>Course:</strong> {selectedSubmission?.courseName}</p>
+                <p><strong>Submitted:</strong> {new Date(selectedSubmission?.submissionDate).toLocaleString()}</p>
+              </div>
+              
+              <form onSubmit={submitGrade} className="grade-form">
+                <div className="form-group">
+                  <label htmlFor="grade">Grade:</label>
+                  <input
+                    type="text"
+                    id="grade"
+                    value={gradeValue}
+                    onChange={(e) => setGradeValue(e.target.value)}
+                    disabled={!!selectedSubmission?.grade}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="feedback">Feedback (optional):</label>
+                  <textarea
+                    id="feedback"
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    rows="4"
+                    disabled={!!selectedSubmission?.grade}
+                  ></textarea>
+                </div>
+                
+                {gradeError && <p className="error-message">{gradeError}</p>}
+                
+                {!selectedSubmission?.grade && (
+                  <div className="form-actions">
+                    <button
+                      type="submit"
+                      className="submit-grade-button"
+                      disabled={isGrading}
+                    >
+                      {isGrading ? 'Submitting...' : 'Submit Grade'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={closeGradeModal}
+                      className="cancel-button"
+                      disabled={isGrading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
+            
+            {selectedSubmission?.grade && (
+              <div className="modal-footer">
+                <button onClick={closeGradeModal} className="close-modal-button">Close</button>
+              </div>
+            )}
           </div>
         </div>
       )}
