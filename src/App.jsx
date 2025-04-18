@@ -65,7 +65,7 @@ function App() {
             </Route>
 
             {/* Common routes - accessible by all roles */}
-            <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<Settings />} />
             <Route path="upload" element={<FileUpload />} />
             <Route path="files" element={<FileList />} />
 

@@ -411,6 +411,34 @@
   margin-bottom: 10px;
 }
 
+.upload-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.upload-button:hover {
+  background-color: #2563eb;
+}
+
+.upload-success {
+  background-color: #dcfce7;
+  color: #15803d;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 500;
+}
+
 .file-info {
   display: flex;
   justify-content: space-between;

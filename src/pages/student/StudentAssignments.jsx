@@ -16,7 +16,6 @@ const StudentAssignments = () => {
   const [submissionText, setSubmissionText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [renderKey, forceUpdate] = useReducer(forceUpdateReducer, 0);
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -29,46 +28,6 @@ const StudentAssignments = () => {
   // State for assignments and courses
   const [assignments, setAssignments] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
-
-  // Function to handle file uploads
-  const handleUploadFiles = async () => {
-    if (uploadedFiles.length === 0) return;
-    
-    try {
-      setIsUploading(true);
-      const ids = [];
-      
-      // Upload each file and track progress
-      for (const fileObj of uploadedFiles) {
-        const formData = new FormData();
-        formData.append('file', fileObj.file);
-        formData.append('userEmail', currentUser.email); // Add user email to track who uploaded the file
-        
-        const response = await axios.post(getApiUrl('upload'), formData, {
-          onUploadProgress: (progressEvent) => {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setUploadProgress(prev => ({
-              ...prev,
-              [fileObj.name]: progress
-            }));
-          }
-        });
-        
-        if (response.data && response.data.fileId) {
-          ids.push(response.data.fileId);
-        }
-      }
-      
-      // Update fileIds state with the uploaded file IDs
-      setFileIds(ids);
-      alert(`Successfully uploaded ${ids.length} file(s)`);
-    } catch (err) {
-      console.error('Error uploading files:', err);
-      alert('Failed to upload files. Please try again.');
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   // Fetch student's assignments and courses for filters
   useEffect(() => {
@@ -348,7 +307,7 @@ const StudentAssignments = () => {
                 )}
                   {assignment.status === 'submitted' && !assignment.grade && (
                     <span className="submitted-badge">Submitted</span>
-                  )}
+                )}
                 {assignment.status === 'graded' && (
                     <div className="grade-info">
                       <span className="grade-badge">Grade: {assignment.grade}</span>

@@ -99,17 +99,34 @@ const Classes = () => {
       ) : error ? (
         <div className="error">{error}</div>
       ) : (
-        <div className="courses-grid">
-          {courses.map(course => (
-            <div key={course._id} className="course-card">
-              <div className="course-info">
-                <h3>{course.name}</h3>
-                <p>{course.description}</p>
-                <p>Course Code: {course.code}</p>
-              </div>
+        <>
+          {courses.length > 0 ? (
+            <div className="courses-grid">
+              {courses.map(course => (
+                <div key={course._id} className="course-card">
+                  <div className="course-info">
+                    <h3>{course.name}</h3>
+                    <p>{course.description || "No description provided"}</p>
+                    <div className="course-students">
+                      {course.students?.length || 0} students enrolled
+                    </div>
+                    {course.code && <div className="course-code">Code: {course.code}</div>}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          ) : (
+            <div className="no-courses">
+              <p>You haven't created any courses yet.</p>
+              <button 
+                className="action-button primary"
+                onClick={() => setShowCreateModal(true)}
+              >
+                Create Your First Course
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {showCreateModal && (

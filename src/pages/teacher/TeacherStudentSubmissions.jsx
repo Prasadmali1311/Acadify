@@ -3,14 +3,14 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; // Assuming auth context provides token/user info
 import { getApiUrl } from '../../config/database'; // Corrected path
 import axios from 'axios';
-import './TeacherStudentSubmissions.css'; // We'll create this later
+import './TeacherStudentSubmissions.css'; 
 
 // Function to format file size
 const formatFileSize = (bytes) => {
-  if (!bytes || bytes === 0) return '0 Bytes';
+  if (!bytes || isNaN(bytes) || bytes === 0) return '0 Bytes';
   
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(1024));
   
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 };
@@ -274,7 +274,7 @@ const TeacherStudentSubmissions = () => {
                     <div key={file._id} className="file-item">
                       <div className="file-details">
                         <span className="file-name">{file.metadata?.originalName || file.filename}</span>
-                        <small>Size: {formatFileSize(file.size)}</small>
+                        <small className="file-size">Size: {formatFileSize(file.size || file.length)}</small>
                       </div>
                       <button 
                         onClick={() => openFile(file.filename)}

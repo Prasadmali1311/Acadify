@@ -133,6 +133,13 @@ const Courses = () => {
         throw new Error('User email not found');
       }
       
+      // Get the student's full name
+      const studentName = currentUser.firstName && currentUser.lastName
+        ? `${currentUser.firstName} ${currentUser.lastName}`
+        : currentUser.firstName || currentUser.lastName || 'Student';
+      
+      console.log('Enrolling with name:', studentName);
+      
       // Enroll the student in the course
       const response = await fetch(`${getApiUrl('course')}/${courseId}/enroll`, {
         method: 'POST',
@@ -141,7 +148,7 @@ const Courses = () => {
         },
         body: JSON.stringify({
           email,
-          name: currentUser.displayName || 'Student'
+          name: studentName
         })
       });
       
@@ -221,7 +228,7 @@ const Courses = () => {
 
       {isLoading ? (
         <div className="loading-state">
-          <p>Loading courses...</p>
+          Loading courses...
         </div>
       ) : error ? (
         <div className="error-state">
@@ -325,7 +332,9 @@ const Courses = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="no-results">No available courses match your search</div>
+                  <div className="no-results">
+                    No available courses match your search
+                  </div>
                 )}
               </div>
             </>
