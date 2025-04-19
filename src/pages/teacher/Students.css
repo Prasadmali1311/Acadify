@@ -195,10 +195,12 @@
 
 .student-email {
   color: #4b5563;
+  max-width: 150px;
 }
 
 .student-courses {
-  max-width: 300px;
+  max-width: 100px;
+  /* background-color: #0069d9; */
 }
 
 .course-tags {
@@ -229,7 +231,7 @@
   border-radius: 4px;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.3s;
 }
 
 .view-submissions-btn:hover {

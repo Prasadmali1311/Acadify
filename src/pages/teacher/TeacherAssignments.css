@@ -4,27 +4,43 @@
 .assignment-list {
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  overflow: hidden;
+  overflow-x: auto;
+  min-width: 900px; /* Minimum width to prevent squeezing */
+}
+
+.assignment-list-container {
+  overflow-x: auto;
 }
 
 .assignment-list-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
-  gap: 1rem;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+  /* grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 0.8fr; */
+  gap: 0.25rem;
   padding: 1rem;
   background-color: #f3f4f6;
   font-weight: 600;
   color: #374151;
+  text-align: center;
+  top: 0;
+  z-index: 1;
+  align-items: center;
+}
+
+.assignment-list-header div:first-child {
+  text-align: left;
 }
 
 .assignment-item {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
-  gap: 1rem;
+  /* grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 0.8fr; */
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 0.25rem;
   padding: 1rem;
   border-top: 1px solid #e5e7eb;
-  transition: background-color 0.2s;
+  transition: background-color 0.s;
   align-items: center;
+  text-align: center;
 }
 
 .assignment-item:hover {
@@ -34,17 +50,30 @@
 .assignment-title {
   font-weight: 500;
   color: #111827;
+  text-align: left;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.2;
+  /* padding-right: 0.25rem; */
 }
 
-.assignment-class, .assignment-date, .assignment-deadline {
-  color: #4b5563;
-  font-size: 0.875rem;
+.assignment-class {
+  padding-left: 0;
+}
+
+.assignment-date, .assignment-deadline {
+  color: #374151;
+  /* font-size: 0.875rem; */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .assignment-submissions {
-  color: #4b5563;
+  color: #374151;
   font-weight: 500;
-  font-size: 0.875rem;
+  /* font-size: 0.875rem; */
 }
 
 .assignment-status-badge {
@@ -54,6 +83,8 @@
   font-weight: 500;
   text-align: center;
   max-width: fit-content;
+  margin: 0 auto;
+  white-space: nowrap;
 }
 
 .assignment-status-badge.active {
@@ -79,6 +110,13 @@
 .assignment-actions {
   display: flex;
   gap: 0.5rem;
+  justify-content: center;
+}
+
+.action-buttons-container {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
 .action-button {
@@ -88,6 +126,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .action-button.publish {
@@ -246,7 +285,6 @@
   margin: 0 auto;
   padding: 1rem;
   box-sizing: border-box;
-  overflow-x: hidden;
 }
 
 @media (min-width: 768px) {
@@ -301,7 +339,7 @@
 }
 
 .report-button:hover {
-  background-color: #1d4ed8;
+  background-color: #000;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
@@ -335,6 +373,7 @@
   transition: all 0.2s;
   width: 100%;
   box-sizing: border-box;
+  overflow: hidden; /* Ensure the card doesn't expand beyond its container */
 }
 
 .content-card:hover {
@@ -652,4 +691,28 @@
 
 .highlight-update {
   animation: highlightAnimation 1.5s ease;
+}
+
+/* Update the dashboard container */
+.dashboard-container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+/* Remove the media query that hides columns on mobile */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+  
+  .content-card {
+    padding: 1rem;
+  }
+  
+  .assignment-list-container {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
 } 

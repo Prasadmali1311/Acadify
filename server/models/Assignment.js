@@ -26,6 +26,11 @@ const assignmentSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  totalMarks: {
+    type: Number,
+    required: true,
+    default: 100
+  },
   deadline: {
     type: Date,
     required: true

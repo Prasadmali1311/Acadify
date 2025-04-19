@@ -12,6 +12,7 @@ const TeacherAssignments = () => {
   const [newAssignmentClass, setNewAssignmentClass] = useState('');
   const [newAssignmentDeadline, setNewAssignmentDeadline] = useState('');
   const [newAssignmentDescription, setNewAssignmentDescription] = useState('');
+  const [newAssignmentTotalMarks, setNewAssignmentTotalMarks] = useState(100);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -142,12 +143,14 @@ const TeacherAssignments = () => {
   // Handler for creating a new assignment
   const handleCreateAssignment = async (e) => {
     e.preventDefault();
-    if (!newAssignmentTitle || !newAssignmentClass || !newAssignmentDeadline) {
-      console.log("Missing required fields:", { 
-        title: newAssignmentTitle, 
-        class: newAssignmentClass, 
-        deadline: newAssignmentDeadline 
-      });
+    
+    if (!classes || classes.length === 0) {
+      alert('Please create a class first before creating an assignment.');
+      return;
+    }
+    
+    if (!newAssignmentClass) {
+      alert('Please select a class for this assignment.');
       return;
     }
     
@@ -174,6 +177,7 @@ const TeacherAssignments = () => {
         instructorId: instructorId,
         instructorName: `${currentUser.firstName} ${currentUser.lastName}`.trim() || 'Teacher',
         deadline: new Date(newAssignmentDeadline),
+        totalMarks: newAssignmentTotalMarks,
         status: 'draft'
       };
       
@@ -187,6 +191,7 @@ const TeacherAssignments = () => {
       setNewAssignmentTitle('');
       setNewAssignmentDescription('');
       setNewAssignmentDeadline('');
+      setNewAssignmentTotalMarks(100);
       
       // Close modal
       setShowModal(false);
@@ -300,6 +305,7 @@ const TeacherAssignments = () => {
           
           {isLoading && (
             <div className="loading-state">
+              <div className="loading-spinner"></div>
               <p>Loading assignments...</p>
             </div>
           )}
@@ -307,70 +313,69 @@ const TeacherAssignments = () => {
           {error && (
             <div className="error-state">
               <p>{error}</p>
-              <button onClick={() => window.location.reload()}>Retry</button>
+              <button className="retry-button" onClick={() => window.location.reload()}>Retry</button>
             </div>
           )}
           
           {!isLoading && !error && (
-            <div className="assignment-list">
-              <div className="assignment-list-header">
-                <div className="assignment-title">Title</div>
-                <div className="assignment-class">Class</div>
-                <div className="assignment-date">Published</div>
-                <div className="assignment-deadline">Deadline</div>
-                <div className="assignment-submissions">Submissions</div>
-                <div className="assignment-status">Status</div>
-                <div className="assignment-actions">Actions</div>
-              </div>
-              {filteredAssignments.length > 0 ? (
-                filteredAssignments.map((assignment) => (
-                  <div key={assignment.id} className="assignment-item">
-                    <div className="assignment-title">{assignment.title}</div>
-                    <div className="assignment-class">{assignment.class}</div>
-                    <div className="assignment-date">{assignment.publishedDate}</div>
-                    <div className="assignment-deadline">{assignment.deadline}</div>
-                    <div className="assignment-submissions">
-                      {assignment.status === 'draft' 
-                        ? '-' 
-                        : `${assignment.submissions}/${assignment.totalStudents}`}
+            <div className="assignment-list-container">
+              <div className="assignment-list">
+                <div className="assignment-list-header">
+                  <div className="assignment-title">Title</div>
+                  <div className="assignment-class">Class</div>
+                  <div className="assignment-date">Published</div>
+                  <div className="assignment-deadline">Deadline</div>
+                  <div className="assignment-submissions">Submissions</div>
+                  <div className="assignment-actions">Actions</div>
+                </div>
+                {filteredAssignments.length > 0 ? (
+                  filteredAssignments.map((assignment) => (
+                    <div key={assignment.id} className="assignment-item">
+                      <div className="assignment-title">{assignment.title}</div>
+                      <div className="assignment-class">{assignment.class}</div>
+                      <div className="assignment-date">{assignment.publishedDate}</div>
+                      <div className="assignment-deadline">{assignment.deadline}</div>
+                      <div className="assignment-submissions">
+                        {assignment.status === 'draft' 
+                          ? '-' 
+                          : `${assignment.submissions}/${assignment.totalStudents}`}
+                      </div>
+                      <div className="assignment-actions">
+                        <div className="action-buttons-container">
+                          {assignment.status === 'draft' ? (
+                            <button 
+                              className="action-button publish"
+                              onClick={() => handlePublishAssignment(assignment.id)}
+                            >
+                              Publish
+                            </button>
+                          ) : assignment.status === 'active' ? (
+                            <button className="action-button grade">
+                              Grade
+                            </button>
+                          ) : (
+                            <button className="action-button view">
+                              View
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className={`assignment-status-badge ${assignment.status}`}>
-                      {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
-                    </div>
-                    <div className="assignment-actions">
-                      {assignment.status === 'draft' ? (
-                        <button 
-                          className="action-button publish"
-                          onClick={() => handlePublishAssignment(assignment.id)}
-                        >
-                          Publish
-                        </button>
-                      ) : assignment.status === 'active' ? (
-                        <button className="action-button grade">
-                          Grade
-                        </button>
-                      ) : (
-                        <button className="action-button view">
-                          View
-                        </button>
-                      )}
-                      <button className="action-button edit">
-                        Edit
+                  ))
+                ) : (
+                  <div className="no-assignments">
+                    <div className="no-assignments-content">
+                      <p>No assignments found matching your filters.</p>
+                      <button 
+                        className="create-first-assignment" 
+                        onClick={() => setShowModal(true)}
+                      >
+                        Create Your First Assignment
                       </button>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="no-assignments">
-                  <p>No assignments found matching your filters.</p>
-                  <button 
-                    className="create-first-assignment" 
-                    onClick={() => setShowModal(true)}
-                  >
-                    Create Your First Assignment
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -434,6 +439,18 @@ const TeacherAssignments = () => {
                   id="assignmentDeadline"
                   value={newAssignmentDeadline}
                   onChange={(e) => setNewAssignmentDeadline(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="assignmentTotalMarks">Total Marks</label>
+                <input
+                  type="number"
+                  id="assignmentTotalMarks"
+                  min="1"
+                  max="1000"
+                  value={newAssignmentTotalMarks}
+                  onChange={(e) => setNewAssignmentTotalMarks(parseInt(e.target.value, 10))}
                   required
                 />
               </div>

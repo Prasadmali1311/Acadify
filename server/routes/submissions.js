@@ -107,7 +107,7 @@ router.get('/teacher/student/:studentEmail', async (req, res) => {
     const studentSubmissions = await Submission.find({
       studentEmail: lowerCaseStudentEmail,
       assignmentId: { $in: assignmentIds }
-    }).populate('assignmentId', 'title courseName'); // Populate assignment details
+    }).populate('assignmentId', 'title courseName totalMarks'); // Added totalMarks to populated fields
     console.log(`[SUBMISSIONS] Found ${studentSubmissions.length} submissions matching criteria.`);
 
     // 5. Format the response
@@ -117,6 +117,8 @@ router.get('/teacher/student/:studentEmail', async (req, res) => {
         content: sub.content,
         fileIds: sub.fileIds,
         submissionDate: sub.submissionDate,
+        marks: sub.marks,
+        totalMarks: sub.assignmentId?.totalMarks || 100, // Include totalMarks from assignment
         grade: sub.grade,
         feedback: sub.feedback,
         gradedDate: sub.gradedDate,
@@ -196,10 +198,10 @@ router.post('/', async (req, res) => {
 router.post('/:submissionId/grade', async (req, res) => {
   try {
     const { submissionId } = req.params;
-    const { grade, feedback } = req.body;
+    const { marks, grade, feedback } = req.body;
     
-    if (!grade) {
-      return res.status(400).json({ error: 'Grade is required' });
+    if (marks === undefined || marks === null) {
+      return res.status(400).json({ error: 'Marks are required' });
     }
 
     const submission = await Submission.findById(submissionId);
@@ -207,7 +209,22 @@ router.post('/:submissionId/grade', async (req, res) => {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    submission.grade = grade;
+    // Fetch the assignment to get total marks
+    const assignment = await Assignment.findById(submission.assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ error: 'Associated assignment not found' });
+    }
+
+    // Validate marks against total marks
+    if (marks < 0 || marks > assignment.totalMarks) {
+      return res.status(400).json({ 
+        error: `Marks must be between 0 and ${assignment.totalMarks}` 
+      });
+    }
+
+    // Update submission with marks and grade
+    submission.marks = marks;
+    submission.grade = grade || '';
     submission.feedback = feedback || '';
     submission.gradedDate = new Date();
     

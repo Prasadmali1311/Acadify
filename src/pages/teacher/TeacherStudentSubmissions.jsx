@@ -27,6 +27,8 @@ const TeacherStudentSubmissions = () => {
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [showGradeModal, setShowGradeModal] = useState(false);
   const [gradeValue, setGradeValue] = useState('');
+  const [marksValue, setMarksValue] = useState(0);
+  const [totalMarks, setTotalMarks] = useState(100);
   const [feedback, setFeedback] = useState('');
   const [isGrading, setIsGrading] = useState(false);
   const [gradeError, setGradeError] = useState(null);
@@ -117,11 +119,13 @@ const TeacherStudentSubmissions = () => {
   };
 
   // Open grading modal
-  const handleGradeSubmission = (submission) => {
+  const handleGradeSubmission = async (submission) => {
     setSelectedSubmission(submission);
     setGradeValue('');
+    setMarksValue(0);
     setFeedback('');
     setGradeError(null);
+    setTotalMarks(submission.totalMarks); // Use totalMarks directly from submission
     setShowGradeModal(true);
   };
 
@@ -130,6 +134,7 @@ const TeacherStudentSubmissions = () => {
     setShowGradeModal(false);
     setSelectedSubmission(null);
     setGradeValue('');
+    setMarksValue(0);
     setFeedback('');
     setGradeError(null);
   };
@@ -138,8 +143,8 @@ const TeacherStudentSubmissions = () => {
   const submitGrade = async (e) => {
     e.preventDefault();
     
-    if (!gradeValue) {
-      setGradeError('Please provide a grade.');
+    if (marksValue < 0 || marksValue > totalMarks) {
+      setGradeError(`Marks must be between 0 and ${totalMarks}.`);
       return;
     }
     
@@ -151,6 +156,7 @@ const TeacherStudentSubmissions = () => {
       const response = await axios.post(
         `${getApiUrl('submissions')}/${selectedSubmission._id}/grade`,
         {
+          marks: marksValue,
           grade: gradeValue,
           feedback: feedback
         },
@@ -166,7 +172,12 @@ const TeacherStudentSubmissions = () => {
         // Update the submission in the local state
         const updatedSubmissions = submissions.map(sub => 
           sub._id === selectedSubmission._id 
-            ? { ...sub, grade: gradeValue, feedback: feedback }
+            ? { 
+                ...sub, 
+                marks: marksValue,
+                grade: gradeValue, 
+                feedback: feedback 
+              }
             : sub
         );
         
@@ -189,8 +200,10 @@ const TeacherStudentSubmissions = () => {
   // View grade details
   const handleViewGrade = (submission) => {
     setSelectedSubmission(submission);
+    setMarksValue(submission.marks || 0);
     setGradeValue(submission.grade || '');
     setFeedback(submission.feedback || '');
+    setTotalMarks(submission.totalMarks); // Use totalMarks from submission
     setShowGradeModal(true);
   };
 
@@ -211,6 +224,7 @@ const TeacherStudentSubmissions = () => {
                 <th>Course</th>
                 <th>Submitted On</th>
                 <th>Status</th>
+                <th>Marks</th>
                 <th>Grade</th>
                 <th>Actions</th>
               </tr>
@@ -222,6 +236,7 @@ const TeacherStudentSubmissions = () => {
                   <td>{sub.courseName}</td>
                   <td>{new Date(sub.submissionDate).toLocaleString()}</td>
                   <td>{sub.grade ? 'Graded' : 'Submitted'}</td>
+                  <td>{sub.marks !== null ? `${sub.marks}/${sub.totalMarks}` : '-'}</td>
                   <td>{sub.grade || '-'}</td>
                   <td className="action-buttons">
                     <button 
@@ -315,14 +330,28 @@ const TeacherStudentSubmissions = () => {
               
               <form onSubmit={submitGrade} className="grade-form">
                 <div className="form-group">
-                  <label htmlFor="grade">Grade:</label>
+                  <label htmlFor="marks">Marks (out of {totalMarks}):</label>
+                  <input
+                    type="number"
+                    id="marks"
+                    min="0"
+                    max={totalMarks}
+                    value={marksValue}
+                    onChange={(e) => setMarksValue(parseInt(e.target.value, 10))}
+                    disabled={!!selectedSubmission?.grade}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="grade">Letter Grade (optional):</label>
                   <input
                     type="text"
                     id="grade"
                     value={gradeValue}
                     onChange={(e) => setGradeValue(e.target.value)}
                     disabled={!!selectedSubmission?.grade}
-                    required
+                    placeholder="e.g., A, B+, Pass, etc."
                   />
                 </div>
                 

@@ -292,6 +292,9 @@ const StudentAssignments = () => {
                   {assignment.submissionDate && (
                     <p><strong>Submitted:</strong> {new Date(assignment.submissionDate).toLocaleDateString()}</p>
                   )}
+                  {assignment.marks !== undefined && assignment.marks !== null && (
+                    <p><strong>Marks:</strong> {assignment.marks}/{assignment.totalMarks || 100}</p>
+                  )}
                   {assignment.grade && (
                     <p><strong>Grade:</strong> {assignment.grade}</p>
                   )}
@@ -310,7 +313,11 @@ const StudentAssignments = () => {
                 )}
                 {assignment.status === 'graded' && (
                     <div className="grade-info">
-                      <span className="grade-badge">Grade: {assignment.grade}</span>
+                      <span className="grade-badge">
+                        {assignment.marks !== undefined && assignment.marks !== null
+                          ? `${assignment.marks}/${assignment.totalMarks || 100} marks`
+                          : `Grade: ${assignment.grade}`}
+                      </span>
                       {assignment.feedback && (
                         <button 
                           onClick={() => {
@@ -338,65 +345,161 @@ const StudentAssignments = () => {
       {showSubmitModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>Submit Assignment</h2>
-            <form onSubmit={handleSubmitAssignment}>
-              <div className="form-group">
-                <label>Submission Text</label>
-                <textarea
-                  value={submissionText}
-                  onChange={(e) => setSubmissionText(e.target.value)}
-                  placeholder="Enter your submission text here..."
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Attach Files</label>
-                <div {...getRootProps()} className={`file-upload-dropzone ${isDragActive ? 'active' : ''}`}>
-                  <input {...getInputProps()} />
-                  {isDragActive ? (
-                    <p>Drop the files here ...</p>
-                  ) : (
-                    <p>Drag and drop files here, or click to select files</p>
-                  )}
-                </div>
-                {uploadedFiles.length > 0 && (
-                  <div className="uploaded-files">
-                    <ul>
-                      {uploadedFiles.map(({ file }) => (
-                        <li key={file.name}>
-                          <div className="file-info">
-                            <span>{file.name}</span>
-                          {uploadProgress[file.name] !== undefined && (
-                            <div className="progress-bar">
-                              <div
-                                  className="progress-fill" 
-                                style={{ width: `${uploadProgress[file.name]}%` }}
-                              />
-                            </div>
-                          )}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+            {currentAssignment?.status === 'graded' ? (
+              // Display grade and feedback for a graded assignment
+              <>
+                <h2>Assignment Grade</h2>
+                <div className="submission-feedback">
+                  <div className="grade-section">
+                    {currentAssignment.marks !== undefined && currentAssignment.marks !== null && (
+                      <div className="marks-display">
+                        <h3>Marks</h3>
+                        <div className="marks-value">{currentAssignment.marks}/{currentAssignment.totalMarks || 100}</div>
+                        <div className="marks-percentage">
+                          {Math.round((currentAssignment.marks / (currentAssignment.totalMarks || 100)) * 100)}%
+                        </div>
+                      </div>
+                    )}
+                    {currentAssignment.grade && (
+                      <div className="grade-display">
+                        <h3>Grade</h3>
+                        <div className="grade-value">{currentAssignment.grade}</div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="form-actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSubmitModal(false);
-                    setUploadedFiles([]);
-                    setUploadProgress({});
-                  }}
-                >
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Submit'}
-                </button>
-              </div>
-            </form>
+                  
+                  {currentAssignment.feedback && (
+                    <div className="feedback-section">
+                      <h3>Instructor Feedback</h3>
+                      <div className="feedback-content">{currentAssignment.feedback}</div>
+                    </div>
+                  )}
+                  
+                  <div className="modal-actions">
+                    <button onClick={() => setShowSubmitModal(false)} className="close-btn">
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Show submission form for pending assignments
+              <>
+                <h2>Submit Assignment</h2>
+                <form onSubmit={handleSubmitAssignment}>
+                  <div className="form-group">
+                    <label>Submission Text</label>
+                    <textarea
+                      value={submissionText}
+                      onChange={(e) => setSubmissionText(e.target.value)}
+                      placeholder="Enter your submission text here..."
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Attach Files</label>
+                    <div {...getRootProps()} className={`file-upload-dropzone ${isDragActive ? 'active' : ''}`}>
+                      <input {...getInputProps()} />
+                      {isDragActive ? (
+                        <p>Drop the files here ...</p>
+                      ) : (
+                        <p>Drag and drop files here, or click to select files</p>
+                      )}
+                    </div>
+                    {uploadedFiles.length > 0 && (
+                      <div className="uploaded-files">
+                        <ul>
+                          {uploadedFiles.map(({ file }) => (
+                            <li key={file.name}>
+                              <div className="file-info">
+                                <span>{file.name}</span>
+                              {uploadProgress[file.name] !== undefined && (
+                                <div className="progress-bar">
+                                  <div
+                                      className="progress-fill" 
+                                    style={{ width: `${uploadProgress[file.name]}%` }}
+                                  />
+                                </div>
+                              )}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                        {fileIds.length === 0 && (
+                          <button 
+                            type="button"
+                            className="upload-button"
+                            onClick={async () => {
+                              if (uploadedFiles.length === 0) return;
+                              
+                              const email = currentUser.email;
+                              const uploadIds = [];
+                              
+                              for (const fileObj of uploadedFiles) {
+                                try {
+                                  const formData = new FormData();
+                                  formData.append('file', fileObj.file);
+                                  formData.append('userEmail', email);
+                                  
+                                  console.log('Pre-uploading file:', fileObj.file.name);
+                                  
+                                  const response = await axios.post(getApiUrl('upload'), formData, {
+                                    headers: {
+                                      'Content-Type': 'multipart/form-data',
+                                    },
+                                    onUploadProgress: (progressEvent) => {
+                                      const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                                      setUploadProgress(prev => ({
+                                        ...prev,
+                                        [fileObj.name]: progress
+                                      }));
+                                    }
+                                  });
+                                  
+                                  if (response.data && response.data.fileId) {
+                                    uploadIds.push(response.data.fileId);
+                                  }
+                                } catch (err) {
+                                  console.error('Error pre-uploading file:', err);
+                                  alert(`Error uploading ${fileObj.file.name}: ${err.message}`);
+                                }
+                              }
+                              
+                              setFileIds(uploadIds);
+                              if (uploadIds.length > 0) {
+                                alert(`Successfully uploaded ${uploadIds.length} file(s)`);
+                              }
+                            }}
+                          >
+                            Upload Files
+                          </button>
+                        )}
+                        {fileIds.length > 0 && (
+                          <div className="upload-success">
+                            ✓ Files uploaded successfully
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="form-actions">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSubmitModal(false);
+                        setUploadedFiles([]);
+                        setUploadProgress({});
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? 'Submitting...' : 'Submit'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

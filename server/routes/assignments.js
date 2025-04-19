@@ -116,7 +116,8 @@ router.post('/', async (req, res) => {
       courseName,
       instructorId,
       instructorName,
-      deadline
+      deadline,
+      totalMarks
     } = req.body;
 
     if (!title || !courseId || !instructorId || !deadline) {
@@ -132,6 +133,7 @@ router.post('/', async (req, res) => {
       courseName,
       instructorId,
       instructorName,
+      totalMarks: totalMarks || 100, // Default to 100 if not provided
       deadline: new Date(deadline)
     });
 

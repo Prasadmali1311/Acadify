@@ -5,12 +5,14 @@ import Signup from './pages/Signup';
 import Unauthorized from './pages/Unauthorized';
 import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
+import RoleBasedReports from './components/RoleBasedReports';
 
 // Student pages
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentCourses from './pages/student/Courses';
 import StudentAssignments from './pages/student/StudentAssignments';
 import StudentProfile from './pages/student/StudentProfile';
+import StudentReports from './pages/student/StudentReports';
 
 // Teacher pages
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
@@ -19,6 +21,7 @@ import TeacherStudents from './pages/teacher/Students';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import TeacherAssignments from './pages/teacher/TeacherAssignments';
 import TeacherStudentSubmissions from './pages/teacher/TeacherStudentSubmissions';
+import TeacherReports from './pages/teacher/TeacherReports';
 
 // Common pages
 import Settings from './pages/Settings';
@@ -40,6 +43,9 @@ function App() {
             {/* Dashboard route */}
             <Route path="dashboard" element={<RoleBasedDashboard />} />
             
+            {/* Reports route - accessible by all roles */}
+            <Route path="reports" element={<RoleBasedReports />} />
+            
             {/* Student routes - only accessible by students */}
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
               <Route path="student">
@@ -48,6 +54,7 @@ function App() {
                 <Route path="courses" element={<StudentCourses />} />
                 <Route path="assignments" element={<StudentAssignments />} />
                 <Route path="profile" element={<StudentProfile />} />
+                <Route path="reports" element={<StudentReports />} />
               </Route>
             </Route>
 
@@ -61,11 +68,12 @@ function App() {
                 <Route path="students/:studentEmail/submissions" element={<TeacherStudentSubmissions />} />
                 <Route path="profile" element={<TeacherProfile />} />
                 <Route path="assignments" element={<TeacherAssignments />} />
+                <Route path="reports" element={<TeacherReports />} />
               </Route>
             </Route>
 
             {/* Common routes - accessible by all roles */}
-          <Route path="settings" element={<Settings />} />
+            <Route path="settings" element={<Settings />} />
             <Route path="upload" element={<FileUpload />} />
             <Route path="files" element={<FileList />} />
 
