@@ -1,5 +1,7 @@
 import express from 'express';
 import Course from '../models/Course.js';
+import Assignment from '../models/Assignment.js';
+import Submission from '../models/Submission.js';
 
 const router = express.Router();
 
@@ -22,14 +24,41 @@ router.get('/enrolled', async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Convert email to lowercase for consistent matching
-    const normalizedEmail = email.toLowerCase();
-
     const courses = await Course.find({
-      'students.email': normalizedEmail
+      'students.email': email.toLowerCase()
     });
     
-    res.status(200).json(courses);
+    // Get assignment counts for each course
+    const coursesWithAssignmentCounts = await Promise.all(courses.map(async (course) => {
+      // Get student's email in lowercase
+      const studentEmail = email.toLowerCase();
+      
+      // Find pending assignments for this course (assignments without submissions)
+      const assignments = await Assignment.find({ courseId: course._id.toString() });
+      
+      // For each assignment, check if the student has a submission
+      const pendingAssignments = await Promise.all(assignments.map(async (assignment) => {
+        const submission = await Submission.findOne({
+          assignmentId: assignment._id,
+          studentEmail: studentEmail
+        });
+        
+        // If no submission found, this is a pending assignment
+        return submission ? null : assignment;
+      }));
+      
+      // Filter out null values and count the remaining pending assignments
+      const pendingCount = pendingAssignments.filter(item => item !== null).length;
+      
+      // Create a new object with the course data and pending assignment count
+      return {
+        ...course._doc,
+        assignmentCount: assignments.length,
+        pendingCount: pendingCount
+      };
+    }));
+
+    res.status(200).json(coursesWithAssignmentCounts);
   } catch (error) {
     console.error('Error fetching enrolled courses:', error);
     res.status(500).json({ error: 'Error fetching enrolled courses' });

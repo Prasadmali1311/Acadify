@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getApiUrl } from '../../config/database';
+import { useNavigate } from 'react-router-dom';
 import './Courses.css';
 
 const Courses = () => {
@@ -9,6 +10,7 @@ const Courses = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [enrolling, setEnrolling] = useState(false);
+  const navigate = useNavigate();
   
   // Get current user from AuthContext
   const { currentUser } = useAuth();
@@ -16,6 +18,10 @@ const Courses = () => {
   // State for courses
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
+
+  // State for showing course details modal
+  const [showCourseModal, setShowCourseModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
 
   // Fetch enrolled courses
   useEffect(() => {
@@ -47,14 +53,27 @@ const Courses = () => {
         console.log('Enrolled courses data:', enrolledData);
         
         // Transform data for UI
-        const formattedEnrolled = enrolledData.map(course => ({
-          id: course._id,
-          name: course.name,
-          instructor: course.instructorName || 'Unknown Instructor',
-          progress: course.progress || Math.floor(Math.random() * 100), // Random for demo
-          nextClass: course.nextClass || 'Not scheduled',
-          assignments: 2 // This would be calculated in a real app
-        }));
+        const formattedEnrolled = enrolledData.map(course => {
+          // Calculate real progress based on completed assignments
+          let progress = 0;
+          if (course.assignmentCount > 0) {
+            const completedAssignments = course.assignmentCount - course.pendingCount;
+            progress = Math.round((completedAssignments / course.assignmentCount) * 100);
+          }
+          let submittedAssignments = course.assignmentCount - course.pendingCount;
+          
+          return {
+            id: course._id,
+            name: course.name,
+            instructor: course.instructorName || 'Unknown Instructor',
+            progress: progress, // Real progress instead of random
+            nextClass: course.nextClass || 'Not scheduled',
+            assignments: course.assignmentCount || 0,
+            pendingCount: course.pendingCount || 0,
+            submittedAssignments: submittedAssignments || 0,
+            description: course.description || 'No description available for this course.'
+          };
+        });
         
         console.log('Formatted enrolled courses:', formattedEnrolled);
         setEnrolledCourses(formattedEnrolled);
@@ -162,13 +181,36 @@ const Courses = () => {
       // Remove from available courses
       setAvailableCourses(availableCourses.filter(course => course.id !== courseId));
       
-      // Add to enrolled courses with progress info
-      setEnrolledCourses([...enrolledCourses, {
-        ...enrolledCourse,
-        progress: 0,
-        nextClass: 'Not scheduled yet',
-        assignments: 0
-      }]);
+      // Fetch the updated enrolled courses to get the correct assignment count
+      const updatedEnrolledResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
+      if (!updatedEnrolledResponse.ok) {
+        throw new Error('Failed to refresh enrolled courses');
+      }
+      
+      const updatedEnrolledData = await updatedEnrolledResponse.json();
+      const updatedCourses = updatedEnrolledData.map(course => {
+        // Calculate real progress based on completed assignments
+        let progress = 0;
+        if (course.assignmentCount > 0) {
+          const completedAssignments = course.assignmentCount - course.pendingCount;
+          progress = Math.round((completedAssignments / course.assignmentCount) * 100);
+        }
+
+        
+        
+        return {
+          id: course._id,
+          name: course.name,
+          instructor: course.instructorName || 'Unknown Instructor',
+          progress: progress, // Real progress instead of random
+          nextClass: course.nextClass || 'Not scheduled yet',
+          assignments: course.assignmentCount || 0,
+          pendingCount: course.pendingCount || 0,
+          description: course.description || 'No description available for this course.'
+        };
+      });
+      
+      setEnrolledCourses(updatedCourses);
       
       // Show success message
       alert(`Successfully enrolled in ${enrolledCourse.name}!`);
@@ -178,6 +220,18 @@ const Courses = () => {
     } finally {
       setEnrolling(false);
     }
+  };
+
+  // Navigate to assignments filtered by course
+  const viewCourseAssignments = (courseName) => {
+    // Navigate to assignments page with course name as state parameter
+    navigate('/student/assignments', { state: { selectedCourse: courseName } });
+  };
+
+  // Show course details modal
+  const showCourseDetails = (course) => {
+    setSelectedCourse(course);
+    setShowCourseModal(true);
   };
 
   // Filter courses based on search term
@@ -265,17 +319,31 @@ const Courses = () => {
                         </div>
                         <div className="course-details">
                           <div className="detail-item">
-                            <span className="detail-icon">📅</span>
-                            <span className="detail-text">Next: {course.nextClass}</span>
+                            <span className="detail-icon">🎯</span>
+                            <span className="detail-text">Total Assignments: {course.assignments}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-icon">☑️</span>
+                            <span className="detail-text">Submitted Assignments: {course.submittedAssignments}</span>
                           </div>
                           <div className="detail-item">
                             <span className="detail-icon">📝</span>
-                            <span className="detail-text">{course.assignments} pending assignments</span>
+                            <span className="detail-text">{course.pendingCount} pending assignments</span>
                           </div>
                         </div>
                         <div className="course-actions">
-                          <button className="action-button primary">Continue Learning</button>
-                          <button className="action-button secondary">View Syllabus</button>
+                          <button 
+                            className="action-button primary"
+                            onClick={() => showCourseDetails(course)}
+                          >
+                            About Course
+                          </button>
+                          <button 
+                            className="action-button secondary"
+                            onClick={() => viewCourseAssignments(course.name)}
+                          >
+                            View Assignments
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -339,6 +407,63 @@ const Courses = () => {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Course Details Modal */}
+      {showCourseModal && selectedCourse && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>{selectedCourse.name}</h2>
+              <button className="close-button" onClick={() => setShowCourseModal(false)}>×</button>
+            </div>
+            <div className="course-details-modal">
+              <div className="course-detail-item">
+                <h3>Instructor</h3>
+                <p>{selectedCourse.instructor}</p>
+              </div>
+              <div className="course-detail-item">
+                <h3>Progress</h3>
+                <div className="course-progress-container">
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill"
+                      style={{ width: `${selectedCourse.progress}%` }}
+                    ></div>
+                  </div>
+                  <span className="progress-percentage">{selectedCourse.progress}%</span>
+                </div>
+              </div>
+              <div className="course-detail-item">
+                <h3>Assignments</h3>
+                <p>Total: {selectedCourse.assignments}</p>
+                <p>Submitted: {selectedCourse.submittedAssignments}</p>
+                <p>Pending: {selectedCourse.pendingCount}</p>
+              </div>
+              <div className="course-detail-item">
+                <h3>Description</h3>
+                <p>{selectedCourse.description || "No description available for this course."}</p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="action-button secondary"
+                onClick={() => {
+                  setShowCourseModal(false);
+                  viewCourseAssignments(selectedCourse.name);
+                }}
+              >
+                View Assignments
+              </button>
+              <button 
+                className="close-button"
+                onClick={() => setShowCourseModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

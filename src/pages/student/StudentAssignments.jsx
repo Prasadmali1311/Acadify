@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useReducer } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDropzone } from 'react-dropzone';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { getApiUrl } from '../../config/database';
 import './StudentAssignments.css';
@@ -9,8 +10,11 @@ import './StudentAssignments.css';
 const forceUpdateReducer = (state) => state + 1;
 
 const StudentAssignments = () => {
+  const location = useLocation();
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedClass, setSelectedClass] = useState('all');
+  const [selectedClass, setSelectedClass] = useState(
+    location.state?.selectedCourse || 'all'
+  );
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [currentAssignment, setCurrentAssignment] = useState(null);
   const [submissionText, setSubmissionText] = useState('');
@@ -21,13 +25,15 @@ const StudentAssignments = () => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
   const [fileIds, setFileIds] = useState([]);
-  
+
   // Get current user
   const { currentUser } = useAuth();
-  
+
   // State for assignments and courses
   const [assignments, setAssignments] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingAssignment, setViewingAssignment] = useState(null);
 
   // Fetch student's assignments and courses for filters
   useEffect(() => {
@@ -39,27 +45,27 @@ const StudentAssignments = () => {
           // Fetch Courses for filter dropdown
           console.log(`[EFFECT] Attempting to fetch courses from: ${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(currentUser.email)}`);
           const coursesResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(currentUser.email)}`);
-          
+
           console.log('[EFFECT] Courses response status:', coursesResponse.status);
           if (!coursesResponse.ok) {
             const errorText = await coursesResponse.text();
             console.error('[EFFECT] Courses response error text:', errorText);
             throw new Error(`Failed to fetch courses: ${coursesResponse.status} ${errorText}`);
           }
-          
+
           const coursesData = await coursesResponse.json();
           setAllCourses(coursesData); // Set courses for filter
           console.log('[EFFECT] Fetched courses for filter:', coursesData);
 
           // Fetch Assignments (using the separate fetchData function)
-          await fetchData(); 
-          
+          await fetchData();
+
           setError(null); // Clear error after successful fetches
         } catch (err) {
           console.error('[EFFECT] Error fetching initial data:', err);
           setError(err.message || 'Failed to load initial data');
         } finally {
-           // Loading state is handled within fetchData
+          // Loading state is handled within fetchData
         }
       } else {
         console.log('[EFFECT] No email found in currentUser:', currentUser);
@@ -80,14 +86,6 @@ const StudentAssignments = () => {
         throw new Error('User email not found');
       }
 
-      // Fetch enrolled courses (Not strictly needed for status, but might be useful context)
-      // const coursesResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
-      // if (!coursesResponse.ok) {
-      //   throw new Error('Failed to fetch courses');
-      // }
-      // const coursesData = await coursesResponse.json();
-      // setCourses(coursesData);
-      // console.log(`[FETCH_DATA] Fetched courses:`, coursesData);
 
       // Fetch assignments
       console.log(`[FETCH_DATA] Fetching assignments from: ${getApiUrl('studentAssignments')}?email=${encodeURIComponent(email)}`);
@@ -98,7 +96,7 @@ const StudentAssignments = () => {
       const assignmentsData = await assignmentsResponse.json();
       console.log(`[FETCH_DATA] Received assignments data from backend:`, JSON.stringify(assignmentsData, null, 2)); // Log the raw data
       setAssignments(assignmentsData); // Update state
-      
+
       setError(null);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -138,8 +136,18 @@ const StudentAssignments = () => {
     }
   });
 
+  // Handle viewing assignment details
+  const handleViewAssignment = (assignment) => {
+    setViewingAssignment(assignment);
+    setShowViewModal(true);
+  };
+
   // Handle opening the submission modal
   const handleOpenSubmitModal = (assignment) => {
+    // if (new Date(assignment.deadline) < new Date()) {
+    //   alert('Deadline has passed. You cannot submit this assignment.');
+    //   return;
+    // }
     setCurrentAssignment(assignment);
     setShowSubmitModal(true);
     setUploadedFiles([]);
@@ -155,16 +163,16 @@ const StudentAssignments = () => {
     try {
       setIsSubmitting(true);
       const email = currentUser.email;
-      
+
       // Upload files first if any and they haven't been uploaded yet
       let submissionFileIds = [...fileIds]; // Use already uploaded files
-      
+
       if (uploadedFiles.length > 0 && fileIds.length === 0) {
         for (const fileObj of uploadedFiles) {
           const formData = new FormData();
           formData.append('file', fileObj.file);
           formData.append('userEmail', email); // Add user email to track who uploaded the file
-          
+
           const response = await axios.post(getApiUrl('upload'), formData, {
             onUploadProgress: (progressEvent) => {
               const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -174,7 +182,7 @@ const StudentAssignments = () => {
               }));
             }
           });
-          
+
           if (response.data && response.data.fileId) {
             submissionFileIds.push(response.data.fileId);
           }
@@ -196,7 +204,7 @@ const StudentAssignments = () => {
 
       // Submit the assignment
       await axios.post(getApiUrl('submissions'), submissionData);
-      
+
       // Close modal and reset states
       setShowSubmitModal(false);
       setCurrentAssignment(null);
@@ -204,13 +212,13 @@ const StudentAssignments = () => {
       setSubmissionText('');
       setUploadProgress({});
       setFileIds([]);
-      
+
       // Refresh assignments
       setTimeout(async () => {
         await fetchData();
         alert('Assignment submitted successfully!');
       }, 1500);
-      
+
     } catch (err) {
       console.error('Error submitting assignment:', err);
       console.error('Error details:', err.response?.data); // Log detailed error
@@ -228,8 +236,8 @@ const StudentAssignments = () => {
           <p className="welcome-subtitle">View, submit, and manage your course assignments</p>
         </div>
         <div className="action-buttons">
-          <button 
-            className="refresh-button" 
+          <button
+            className="refresh-button"
             onClick={() => {
               fetchData();
               forceUpdate();
@@ -243,8 +251,8 @@ const StudentAssignments = () => {
 
       <div className="filters-section">
         <div className="filter-container">
-          <select 
-            value={selectedClass} 
+          <select
+            value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
             className="filter-select"
           >
@@ -257,8 +265,8 @@ const StudentAssignments = () => {
           </select>
         </div>
         <div className="filter-container">
-          <select 
-            value={selectedStatus} 
+          <select
+            value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="filter-select"
           >
@@ -303,18 +311,34 @@ const StudentAssignments = () => {
                   )}
                 </div>
                 <div className="assignment-actions">
-                {assignment.status === 'pending' && (
-                  <button
-                    onClick={() => handleOpenSubmitModal(assignment)}
-                      className="submit-btn"
-                  >
-                    Submit Assignment
-                  </button>
-                )}
+                  {assignment.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleOpenSubmitModal(assignment)}
+                        className="submit-btn"
+                      >
+                        Submit Assignment
+                      </button>
+                      <button
+                        onClick={() => handleViewAssignment(assignment)}
+                        className="view-btn"
+                      >
+                        View Details
+                      </button>
+                    </>
+                  )}
                   {assignment.status === 'submitted' && !assignment.grade && (
-                    <span className="submitted-badge">Submitted</span>
-                )}
-                {assignment.status === 'graded' && (
+                    <>
+                      <span className="submitted-badge">Submitted</span>
+                      <button
+                        onClick={() => handleViewAssignment(assignment)}
+                        className="view-btn"
+                      >
+                        View Details
+                      </button>
+                    </>
+                  )}
+                  {assignment.status === 'graded' && (
                     <div className="grade-info">
                       <span className="grade-badge">
                         {assignment.marks !== undefined && assignment.marks !== null
@@ -322,7 +346,7 @@ const StudentAssignments = () => {
                           : `Grade: ${assignment.grade}`}
                       </span>
                       {assignment.feedback && (
-                        <button 
+                        <button
                           onClick={() => {
                             setCurrentAssignment(assignment);
                             setShowSubmitModal(true);
@@ -332,8 +356,14 @@ const StudentAssignments = () => {
                           View Feedback
                         </button>
                       )}
-                  </div>
-                )}
+                      <button
+                        onClick={() => handleViewAssignment(assignment)}
+                        className="view-btn"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))
@@ -370,14 +400,14 @@ const StudentAssignments = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   {currentAssignment.feedback && (
                     <div className="feedback-section">
                       <h3>Instructor Feedback</h3>
                       <div className="feedback-content">{currentAssignment.feedback}</div>
                     </div>
                   )}
-                  
+
                   <div className="modal-actions">
                     <button onClick={() => setShowSubmitModal(false)} className="close-btn">
                       Close
@@ -416,36 +446,36 @@ const StudentAssignments = () => {
                             <li key={file.name}>
                               <div className="file-info">
                                 <span>{file.name}</span>
-                              {uploadProgress[file.name] !== undefined && (
-                                <div className="progress-bar">
-                                  <div
-                                      className="progress-fill" 
-                                    style={{ width: `${uploadProgress[file.name]}%` }}
-                                  />
-                                </div>
-                              )}
+                                {uploadProgress[file.name] !== undefined && (
+                                  <div className="progress-bar">
+                                    <div
+                                      className="progress-fill"
+                                      style={{ width: `${uploadProgress[file.name]}%` }}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </li>
                           ))}
                         </ul>
                         {fileIds.length === 0 && (
-                          <button 
+                          <button
                             type="button"
                             className="upload-button"
                             onClick={async () => {
                               if (uploadedFiles.length === 0) return;
-                              
+
                               const email = currentUser.email;
                               const uploadIds = [];
-                              
+
                               for (const fileObj of uploadedFiles) {
                                 try {
                                   const formData = new FormData();
                                   formData.append('file', fileObj.file);
                                   formData.append('userEmail', email);
-                                  
+
                                   console.log('Pre-uploading file:', fileObj.file.name);
-                                  
+
                                   const response = await axios.post(getApiUrl('upload'), formData, {
                                     headers: {
                                       'Content-Type': 'multipart/form-data',
@@ -458,7 +488,7 @@ const StudentAssignments = () => {
                                       }));
                                     }
                                   });
-                                  
+
                                   if (response.data && response.data.fileId) {
                                     uploadIds.push(response.data.fileId);
                                   }
@@ -467,7 +497,7 @@ const StudentAssignments = () => {
                                   alert(`Error uploading ${fileObj.file.name}: ${err.message}`);
                                 }
                               }
-                              
+
                               setFileIds(uploadIds);
                               if (uploadIds.length > 0) {
                                 alert(`Successfully uploaded ${uploadIds.length} file(s)`);
@@ -503,6 +533,81 @@ const StudentAssignments = () => {
                 </form>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* View Assignment Modal */}
+      {showViewModal && viewingAssignment && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Assignment Details</h2>
+            <div className="view-assignment-content">
+              <div className="assignment-detail-item">
+                <h3>Title</h3>
+                <p>{viewingAssignment.title}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Course</h3>
+                <p>{viewingAssignment.courseName}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Instructor</h3>
+                <p>{viewingAssignment.instructorName}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Deadline</h3>
+                <p>{new Date(viewingAssignment.deadline).toLocaleString()}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Status</h3>
+                <p>{viewingAssignment.status}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Total Marks</h3>
+                <p>{viewingAssignment.totalMarks || 100}</p>
+              </div>
+              {viewingAssignment.description && (
+                <div className="assignment-detail-item">
+                  <h3>Description</h3>
+                  <p className="assignment-description">{viewingAssignment.description}</p>
+                </div>
+              )}
+              {viewingAssignment.submissionDate && (
+                <div className="assignment-detail-item">
+                  <h3>Submitted On</h3>
+                  <p>{new Date(viewingAssignment.submissionDate).toLocaleString()}</p>
+                </div>
+              )}
+              {viewingAssignment.marks !== undefined && viewingAssignment.marks !== null && (
+                <div className="assignment-detail-item">
+                  <h3>Marks</h3>
+                  <p>{viewingAssignment.marks}/{viewingAssignment.totalMarks || 100}</p>
+                </div>
+              )}
+              {viewingAssignment.grade && (
+                <div className="assignment-detail-item">
+                  <h3>Grade</h3>
+                  <p>{viewingAssignment.grade}</p>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              {viewingAssignment.status === 'pending' && (
+                <button 
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleOpenSubmitModal(viewingAssignment);
+                  }} 
+                  className="submit-btn"
+                >
+                  Submit Assignment
+                </button>
+              )}
+              <button onClick={() => setShowViewModal(false)} className="close-btn">
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

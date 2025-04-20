@@ -203,6 +203,8 @@
 
 .modal-body {
   padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .form-group {
@@ -236,7 +238,6 @@
   border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
 }
 
 .cancel-button {
@@ -715,4 +716,23 @@
     margin: 0 -1rem;
     padding: 0 1rem;
   }
+}
+
+/* Assignment detail modal styles */
+.assignment-detail-item {
+  margin-bottom: 1.5rem;
+}
+
+.assignment-detail-item h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+.assignment-detail-item p {
+  font-size: 1rem;
+  color: #111827;
+  line-height: 1.5;
+  word-break: break-word;
 } 

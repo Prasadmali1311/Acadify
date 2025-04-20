@@ -616,3 +616,63 @@
 .close-btn:hover {
   background-color: #e5e7eb;
 }
+
+.view-btn {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.view-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.deadline-passed {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.view-assignment-content {
+  padding: 20px;
+}
+
+.assignment-detail-item {
+  margin-bottom: 1rem;
+}
+
+.assignment-detail-item h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.assignment-detail-item p {
+  margin: 0;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.assignment-description {
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+}

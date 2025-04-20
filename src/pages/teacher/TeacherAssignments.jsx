@@ -25,6 +25,8 @@ const TeacherAssignments = () => {
   // State for assignments and courses
   const [assignments, setAssignments] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingAssignment, setViewingAssignment] = useState(null);
 
   // Force component to update
   const forceUpdate = useCallback(() => {
@@ -104,6 +106,7 @@ const TeacherAssignments = () => {
           publishedDate: assignment.createdAt ? new Date(assignment.createdAt).toISOString().split('T')[0] : 'Unknown',
           deadline: assignment.deadline ? new Date(assignment.deadline).toISOString().split('T')[0] : 'Unknown',
           status: assignment.status || 'active',
+          totalMarks: assignment.totalMarks || 100,
           submissions,
           totalStudents
         };
@@ -232,6 +235,12 @@ const TeacherAssignments = () => {
     }
   };
 
+  // Handler for viewing assignment details
+  const handleViewAssignment = (assignment) => {
+    setViewingAssignment(assignment);
+    setShowViewModal(true);
+  };
+
   // Filter assignments based on selected class and status
   const filteredAssignments = assignments.filter(assignment => {
     const matchesClass = selectedClass === 'all' || assignment.class === selectedClass;
@@ -354,7 +363,10 @@ const TeacherAssignments = () => {
                               Grade
                             </button>
                           ) : (
-                            <button className="action-button view">
+                            <button 
+                              className="action-button view"
+                              onClick={() => handleViewAssignment(assignment)}
+                            >
                               View
                             </button>
                           )}
@@ -381,6 +393,59 @@ const TeacherAssignments = () => {
         </div>
       </div>
 
+      {/* Modal for viewing assignment details */}
+      {showViewModal && viewingAssignment && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Assignment Details</h2>
+              <button className="close-button" onClick={() => setShowViewModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="assignment-detail-item">
+                <h3>Title</h3>
+                <p>{viewingAssignment.title}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Class</h3>
+                <p>{viewingAssignment.class}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Published</h3>
+                <p>{viewingAssignment.publishedDate}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Deadline</h3>
+                <p>{viewingAssignment.deadline}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Submissions</h3>
+                <p>{viewingAssignment.submissions}/{viewingAssignment.totalStudents}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Status</h3>
+                <p>{viewingAssignment.status.charAt(0).toUpperCase() + viewingAssignment.status.slice(1)}</p>
+              </div>
+              <div className="assignment-detail-item">
+                <h3>Total Marks</h3>
+                <p>{viewingAssignment.totalMarks}</p>
+              </div>
+              {viewingAssignment.description && (
+                <div className="assignment-detail-item">
+                  <h3>Description</h3>
+                  <p>{viewingAssignment.description}</p>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShowViewModal(false)} className="cancel-button">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Modal for creating a new assignment */}
       {showModal && (
         <div className="modal-overlay">
