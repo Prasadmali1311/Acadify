@@ -28,7 +28,7 @@ const TeacherDashboard = () => {
       <div className="welcome-section">
         <div className="welcome-text">
           <h1 className="welcome-heading">
-            Welcome back, Teacher <span className="welcome-name">{getUserFirstName()}</span>
+            Welcome back, <span className="welcome-name">{getUserFirstName()}</span>
           </h1>
           <p className="welcome-subtitle">Here's what's happening with your classes</p>
         </div>

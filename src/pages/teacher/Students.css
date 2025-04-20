@@ -163,6 +163,11 @@
   width: 100%;
   border-collapse: collapse;
   background-color: white;
+  align-items: center;
+}
+
+.students-table tr:last-child td {
+  border-bottom: none;
 }
 
 .students-table th {

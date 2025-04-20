@@ -148,6 +148,11 @@ const TeacherStudentSubmissions = () => {
       return;
     }
     
+    if (!gradeValue.trim()) {
+      setGradeError('Grade is required.');
+      return;
+    }
+    
     try {
       setIsGrading(true);
       setGradeError(null);
@@ -344,7 +349,7 @@ const TeacherStudentSubmissions = () => {
                 </div>
                 
                 <div className="form-group">
-                  <label htmlFor="grade">Letter Grade (optional):</label>
+                  <label htmlFor="grade">Letter Grade:</label>
                   <input
                     type="text"
                     id="grade"
@@ -352,6 +357,7 @@ const TeacherStudentSubmissions = () => {
                     onChange={(e) => setGradeValue(e.target.value)}
                     disabled={!!selectedSubmission?.grade}
                     placeholder="e.g., A, B+, Pass, etc."
+                    required
                   />
                 </div>
                 

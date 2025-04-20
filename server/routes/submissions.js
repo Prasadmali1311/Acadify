@@ -203,6 +203,10 @@ router.post('/:submissionId/grade', async (req, res) => {
     if (marks === undefined || marks === null) {
       return res.status(400).json({ error: 'Marks are required' });
     }
+    
+    if (!grade) {
+      return res.status(400).json({ error: 'Grade is required' });
+    }
 
     const submission = await Submission.findById(submissionId);
     if (!submission) {
@@ -224,7 +228,7 @@ router.post('/:submissionId/grade', async (req, res) => {
 
     // Update submission with marks and grade
     submission.marks = marks;
-    submission.grade = grade || '';
+    submission.grade = grade;
     submission.feedback = feedback || '';
     submission.gradedDate = new Date();
     

@@ -224,7 +224,7 @@ const StudentAssignments = () => {
     <div className="dashboard-container" key={renderKey}>
       <div className="welcome-section">
         <div className="welcome-text">
-          <h1 className="welcome-heading">Your Assignments (student)</h1>
+          <h1 className="welcome-heading">Your Assignments</h1>
           <p className="welcome-subtitle">View, submit, and manage your course assignments</p>
         </div>
         <div className="action-buttons">
@@ -293,7 +293,10 @@ const StudentAssignments = () => {
                     <p><strong>Submitted:</strong> {new Date(assignment.submissionDate).toLocaleDateString()}</p>
                   )}
                   {assignment.marks !== undefined && assignment.marks !== null && (
-                    <p><strong>Marks:</strong> {assignment.marks}/{assignment.totalMarks || 100}</p>
+                    <p><strong>Marks:</strong> {assignment.marks}/{assignment.totalMarks || undefined}</p>
+                  )}
+                  {assignment.marks == undefined && assignment.marks == null && (
+                    <p><strong>Marks:</strong>undefined/{assignment.totalMarks || undefined}</p>
                   )}
                   {assignment.grade && (
                     <p><strong>Grade:</strong> {assignment.grade}</p>

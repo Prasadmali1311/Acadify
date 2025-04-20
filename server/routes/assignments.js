@@ -74,8 +74,10 @@ router.get('/student', async (req, res) => {
         instructorId: assignment.instructorId,
         instructorName: assignment.instructorName,
         deadline: assignment.deadline,
-        status: status, // Use the determined status
+        totalMarks: assignment.totalMarks,
+        status: status,
         submissionDate: submission?.submissionDate,
+        marks: submission?.marks,
         grade: submission?.grade,
         feedback: submission?.feedback,
         gradedDate: submission?.gradedDate
