@@ -145,7 +145,7 @@ const Header = () => {
               </div>
               <div className="profile-menu-items">
                 <button className="profile-menu-item" onClick={() => {
-                  navigate('profile');
+                  navigate(`/${userRole}/profile`);
                   setIsProfileMenuOpen(false);
                 }}>
                   <span>Profile</span>

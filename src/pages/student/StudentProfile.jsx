@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import '../../styles/Profile.css';
+import './StudentProfile.css';
 
 const StudentProfile = () => {
   const { currentUser, updateUserProfile } = useAuth();
@@ -13,6 +13,8 @@ const StudentProfile = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState('');
 
   useEffect(() => {
     if (currentUser) {
@@ -22,6 +24,7 @@ const StudentProfile = () => {
         email: currentUser.email || '',
         mobileNumber: currentUser.mobileNumber || ''
       });
+      setPhotoPreview(currentUser.photoURL || '');
     }
   }, [currentUser]);
 
@@ -33,6 +36,18 @@ const StudentProfile = () => {
     }));
   };
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -40,7 +55,17 @@ const StudentProfile = () => {
     setLoading(true);
 
     try {
-      await updateUserProfile(formData);
+      const formDataToSend = new FormData();
+      formDataToSend.append('firstName', formData.firstName);
+      formDataToSend.append('lastName', formData.lastName);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('mobileNumber', formData.mobileNumber);
+      
+      if (photoFile) {
+        formDataToSend.append('photo', photoFile);
+      }
+
+      await updateUserProfile(formDataToSend);
       setSuccess('Profile updated successfully!');
     } catch (error) {
       setError(error.message || 'Failed to update profile');
@@ -58,6 +83,25 @@ const StudentProfile = () => {
         {success && <div className="success-message">{success}</div>}
 
         <form onSubmit={handleSubmit}>
+          <div className="profile-image-container">
+            {photoPreview ? (
+              <img src={photoPreview} alt="Profile" className="profile-image" />
+            ) : (
+              <div className="profile-image-placeholder">
+                {formData.firstName.charAt(0)}{formData.lastName.charAt(0)}
+              </div>
+            )}
+            <label className="update-photo-button">
+              Change Photo
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+
           <div className="form-group">
             <label htmlFor="firstName">First Name</label>
             <input

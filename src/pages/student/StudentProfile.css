@@ -1,0 +1,127 @@
+.profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 64px);
+  padding: 2rem;
+  background-color: #f5f5f5;
+}
+
+.profile-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+}
+
+.profile-card h2 {
+  color: #333;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.profile-image-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.profile-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  border: 3px solid #4CAF50;
+}
+
+.profile-image-placeholder {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.update-photo-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.update-photo-button:hover {
+  background-color: #45a049;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-group input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+button[type="submit"] {
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.3s;
+}
+
+button[type="submit"]:hover {
+  background-color: #45a049;
+}
+
+button[type="submit"]:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+} 

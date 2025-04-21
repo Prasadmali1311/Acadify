@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     enum: ['student', 'teacher', 'admin'],
     default: 'student'
   },
+  photoURL: {
+    type: String,
+    trim: true
+  },
   createdAt: {
     type: Date,
     default: Date.now

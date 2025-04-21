@@ -121,6 +121,37 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function updateUserProfile(profileData) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await fetch(`${API_URL}/users/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update profile');
+      }
+
+      const data = await response.json();
+      setCurrentUser(data.user);
+      
+      return data.user;
+    } catch (error) {
+      console.error('Update profile error:', error);
+      throw error;
+    }
+  }
+
   // Check for existing token on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -150,6 +181,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     getUserProfile,
+    updateUserProfile,
   };
 
   return (

@@ -55,9 +55,9 @@ const Profile = () => {
     }
   };
 
-  if (isLoading) {
-    return <div className="loading">Loading profile...</div>;
-  }
+  // if (isLoading) {
+  //   return <div className="loading">Loading profile...</div>;
+  // }
 
   if (error) {
     return <div className="error">{error}</div>;

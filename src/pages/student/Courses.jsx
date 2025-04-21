@@ -328,7 +328,7 @@ const Courses = () => {
                           </div>
                           <div className="detail-item">
                             <span className="detail-icon">📝</span>
-                            <span className="detail-text">{course.pendingCount} pending assignments</span>
+                            <span className="detail-text">pending assignments: {course.pendingCount}</span>
                           </div>
                         </div>
                         <div className="course-actions">
