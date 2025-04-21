@@ -193,7 +193,8 @@ router.get('/profile', async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         mobileNumber: user.mobileNumber,
-        role: user.role
+        role: user.role,
+        photoURL: user.photoURL
       }
     });
   } catch (error) {
@@ -236,6 +237,21 @@ router.put('/profile', upload.single('photo'), async (req, res) => {
 
     // Handle photo upload if present
     if (req.file) {
+      // Delete previous photo if it exists
+      if (user.photoURL) {
+        const previousFilename = user.photoURL.split('/').pop(); // Get filename from URL
+        try {
+          const files = await bucket.find({ filename: previousFilename }).toArray();
+          if (files.length > 0) {
+            await bucket.delete(files[0]._id);
+            console.log('Previous photo deleted:', previousFilename);
+          }
+        } catch (error) {
+          console.error('Error deleting previous photo:', error);
+          // Continue with upload even if delete fails
+        }
+      }
+
       // Create a unique filename
       const filename = crypto.randomBytes(16).toString('hex') + path.extname(req.file.originalname);
       
@@ -263,8 +279,8 @@ router.put('/profile', upload.single('photo'), async (req, res) => {
         uploadStream.on('error', reject);
       });
 
-      // Update user's photoURL
-      user.photoURL = `/api/upload/files/${uploadStream.id}`;
+      // Update user's photoURL with filename
+      user.photoURL = `http://localhost:5000/api/upload/file/${filename}`;
     }
 
     // Save updated user

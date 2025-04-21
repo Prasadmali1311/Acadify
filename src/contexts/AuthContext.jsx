@@ -132,9 +132,8 @@ export function AuthProvider({ children }) {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(profileData),
+        body: profileData instanceof FormData ? profileData : JSON.stringify(profileData),
       });
 
       if (!response.ok) {
