@@ -10,6 +10,7 @@ import courseRoutes from './routes/courses.js';
 import assignmentRoutes from './routes/assignments.js';
 import submissionRoutes from './routes/submissions.js';
 import userRoutes from './routes/users.js';
+import settingsRoutes from './routes/settings.js';
 import multer from 'multer';
 import { connectDB } from './db.js';
 import process from 'process';
@@ -45,6 +46,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

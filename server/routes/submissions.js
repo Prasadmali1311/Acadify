@@ -161,14 +161,14 @@ router.post('/', async (req, res) => {
     }
     
     // Check if deadline has passed
-    const now = new Date();
-    const deadline = new Date(assignment.deadline);
-    if (now > deadline) {
-      return res.status(400).json({
-        error: 'Submission deadline has passed',
-        deadlineDate: deadline
-      });
-    }
+    // const now = new Date();
+    // const deadline = new Date(assignment.deadline);
+    // if (now > deadline) {
+    //   return res.status(400).json({
+    //     error: 'Submission deadline has passed',
+    //     deadlineDate: deadline
+    //   });
+    // }
 
     // Check if a submission already exists
     const existingSubmission = await Submission.findOne({

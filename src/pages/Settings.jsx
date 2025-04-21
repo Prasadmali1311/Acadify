@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 import './Settings.css';
 
 const Settings = () => {
@@ -15,6 +16,38 @@ const Settings = () => {
     timezone: 'UTC',
     privacy: 'friends'
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Fetch user settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Authentication required');
+          return;
+        }
+
+        const response = await axios.get('http://localhost:5000/api/settings', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        setSettings(response.data.settings);
+        setError('');
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+        setError('Failed to load settings');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   // Handle toggle change
   const handleToggleChange = (setting) => {
@@ -32,25 +65,60 @@ const Settings = () => {
     }));
   };
 
-  // Save settings (would normally connect to backend)
-  const saveSettings = () => {
-    // In a real app, you would save to backend here
-    alert('Settings saved successfully!');
+  // Save settings
+  const saveSettings = async () => {
+    try {
+      setError('');
+      setSuccess('');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+
+      await axios.put('http://localhost:5000/api/settings', settings, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      setSuccess('Settings saved successfully!');
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      setError('Failed to save settings');
+    }
   };
 
   // Reset settings to defaults
-  const resetSettings = () => {
-    setSettings({
-      emailNotifications: true,
-      smsNotifications: false,
-      darkMode: false,
-      soundEffects: true,
-      autoSave: true,
-      language: 'english',
-      timezone: 'UTC',
-      privacy: 'friends'
-    });
+  const resetSettings = async () => {
+    try {
+      setError('');
+      setSuccess('');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+
+      const response = await axios.post('http://localhost:5000/api/settings/reset', {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      setSettings(response.data.settings);
+      setSuccess('Settings reset to defaults');
+    } catch (err) {
+      console.error('Error resetting settings:', err);
+      setError('Failed to reset settings');
+    }
   };
+
+  if (loading) {
+    return <div className="settings-container">Loading settings...</div>;
+  }
 
   return (
     <div className="settings-container">
@@ -58,6 +126,9 @@ const Settings = () => {
         <h1 className="settings-title">Settings</h1>
         <p className="settings-description">Manage your account settings and preferences</p>
       </div>
+
+      {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">{success}</div>}
 
       <div className="settings-navigation">
         <button 
@@ -99,7 +170,7 @@ const Settings = () => {
                 <div className="setting-label">Email Address</div>
                 <div className="setting-description">Your current email: {currentUser?.email}</div>
               </div>
-              <button className="edit-button">Change</button>
+              <button className="edit-button" disabled>Change</button>
             </div>
 
             <div className="setting-item">
@@ -107,7 +178,7 @@ const Settings = () => {
                 <div className="setting-label">Password</div>
                 <div className="setting-description">Last changed 3 months ago</div>
               </div>
-              <button className="edit-button">Update</button>
+              <button className="edit-button" disabled>Update</button>
             </div>
           </div>
 
