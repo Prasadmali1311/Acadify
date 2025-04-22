@@ -19,13 +19,34 @@ router.get('/', async (req, res) => {
 // Get student submissions
 router.get('/student', async (req, res) => {
   try {
-    const { studentId } = req.query;
-    if (!studentId) {
-      return res.status(400).json({ error: 'Student ID is required' });
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: 'Student email is required' });
     }
 
-    const submissions = await Submission.find({ studentId });
-    res.status(200).json(submissions);
+    // Find student's submissions
+    const studentEmail = email.toLowerCase();
+    const studentSubmissions = await Submission.find({ studentEmail })
+      .populate('assignmentId', 'title courseName totalMarks deadline');
+
+    // Format submissions with assignment details
+    const formattedSubmissions = studentSubmissions.map(sub => ({
+      _id: sub._id,
+      assignmentId: sub.assignmentId?._id,
+      assignmentTitle: sub.assignmentId?.title || 'N/A',
+      courseName: sub.assignmentId?.courseName || 'N/A',
+      deadline: sub.assignmentId?.deadline,
+      totalMarks: sub.assignmentId?.totalMarks || 100,
+      content: sub.content,
+      fileIds: sub.fileIds,
+      submissionDate: sub.submissionDate,
+      marks: sub.marks,
+      grade: sub.grade,
+      feedback: sub.feedback,
+      gradedDate: sub.gradedDate
+    }));
+
+    res.status(200).json(formattedSubmissions);
   } catch (error) {
     console.error('Error fetching student submissions:', error);
     res.status(500).json({ error: 'Error fetching student submissions' });
@@ -250,4 +271,4 @@ router.post('/:submissionId/grade', async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

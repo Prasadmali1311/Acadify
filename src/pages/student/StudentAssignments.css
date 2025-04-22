@@ -162,9 +162,11 @@
 .assignment-header {
   display: flex;
   justify-content: space-between;
+  gap: 5px;
   align-items: flex-start;
   padding: 16px 20px;
   border-bottom: 1px solid #f3f4f6;
+  /* background-color: #32446b; */
 }
 
 .assignment-card h3 {

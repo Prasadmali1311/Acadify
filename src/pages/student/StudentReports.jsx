@@ -1,53 +1,106 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { getApiUrl } from '../../config/database';
+import axios from 'axios';
 import './StudentReports.css';
 
 const StudentReports = () => {
-  const [selectedTimeframe, setSelectedTimeframe] = useState('all');
-  const [selectedSubject, setSelectedSubject] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { currentUser } = useAuth();
 
-  // Sample subjects for filter
-  const subjects = [
-    { id: 1, name: 'HTML & CSS Fundamentals' },
-    { id: 2, name: 'JavaScript Essentials' },
-    { id: 3, name: 'React Framework' },
-    { id: 4, name: 'Backend Development with Node.js' },
-  ];
-  
+  // State for performance data
+  const [stats, setStats] = useState({
+    gpa: 0,
+    totalAssignments: 0,
+    completedAssignments: 0,
+    averageGrade: 0
+  });
+  const [subjects, setSubjects] = useState([]);
+  const [recentGrades, setRecentGrades] = useState([]);
+
+  useEffect(() => {
+    const fetchPerformanceData = async () => {
+      if (!currentUser?.email) return;
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch enrolled courses with performance data
+        const coursesResponse = await axios.get(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(currentUser.email)}`);
+        const coursesData = coursesResponse.data;
+
+        // Format courses for subject performance
+        const formattedSubjects = coursesData.map(course => {
+          const completedAssignments = course.assignmentCount - course.pendingCount;
+          const progress = course.assignmentCount > 0 
+            ? Math.round((completedAssignments / course.assignmentCount) * 100) 
+            : 0;
+
+          return {
+            id: course._id,
+            name: course.name,
+            progress,
+            assignmentCount: course.assignmentCount,
+            completedAssignments
+          };
+        });
+        setSubjects(formattedSubjects);
+
+        // Calculate overall statistics
+        const totalAssignments = formattedSubjects.reduce((sum, subject) => sum + subject.assignmentCount, 0);
+        const totalCompleted = formattedSubjects.reduce((sum, subject) => sum + subject.completedAssignments, 0);
+        
+        // Fetch submissions to calculate grades
+        const submissionsResponse = await axios.get(`${getApiUrl('studentSubmissions')}?email=${encodeURIComponent(currentUser.email)}`);
+        const submissionsData = submissionsResponse.data;
+
+        // Calculate average grade from submissions
+        const gradedSubmissions = submissionsData.filter(sub => sub.marks !== undefined && sub.marks !== null);
+        const totalScore = gradedSubmissions.reduce((sum, sub) => sum + (sub.marks / sub.totalMarks) * 100, 0);
+        const averageGrade = gradedSubmissions.length > 0 ? Math.round(totalScore / gradedSubmissions.length) : 0;
+
+        setStats({
+          gpa: (averageGrade / 20).toFixed(1), // Convert percentage to 4.0 scale
+          totalAssignments,
+          completedAssignments: totalCompleted,
+          averageGrade
+        });
+
+        // Get recent graded submissions
+        const recentGrades = submissionsData
+          .filter(sub => sub.marks !== undefined || sub.grade)
+          .sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate))
+          .slice(0, 5);
+
+        setRecentGrades(recentGrades);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching performance data:', err);
+        setError(err.message || 'Failed to load performance data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPerformanceData();
+  }, [currentUser]);
+
+  if (isLoading) {
+    return <div className="loading">Loading performance data...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
   return (
     <div className="dashboard-container">
       <div className="welcome-section">
         <div className="welcome-text">
           <h1 className="welcome-heading">Your Progress Reports</h1>
           <p className="welcome-subtitle">Track your academic performance and progress</p>
-        </div>
-      </div>
-
-      <div className="filters-section">
-        <div className="filter-container">
-          <select 
-            value={selectedTimeframe} 
-            onChange={(e) => setSelectedTimeframe(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Time</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="semester">This Semester</option>
-          </select>
-        </div>
-        <div className="filter-container">
-          <select 
-            value={selectedSubject} 
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Subjects</option>
-            {subjects.map(subject => (
-              <option key={subject.id} value={subject.name}>
-                {subject.name}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
 
@@ -58,24 +111,27 @@ const StudentReports = () => {
             <h2 className="card-title">Overall Performance</h2>
           </div>
           <div className="chart-container">
-            {/* Placeholder for chart */}
             <div className="chart-placeholder">
               <span className="chart-icon">📊</span>
-              <p>Overall Grade: 85%</p>
+              <p>Overall Grade: {stats.averageGrade}%</p>
             </div>
           </div>
           <div className="performance-metrics">
             <div className="metric">
               <span className="metric-label">GPA</span>
-              <span className="metric-value">3.7</span>
+              <span className="metric-value">{stats.gpa}</span>
             </div>
             <div className="metric">
               <span className="metric-label">Assignments</span>
-              <span className="metric-value">15/16</span>
+              <span className="metric-value">{stats.completedAssignments}/{stats.totalAssignments}</span>
             </div>
             <div className="metric">
-              <span className="metric-label">Attendance</span>
-              <span className="metric-value">90%</span>
+              <span className="metric-label">Completion</span>
+              <span className="metric-value">
+                {stats.totalAssignments > 0 
+                  ? Math.round((stats.completedAssignments / stats.totalAssignments) * 100)
+                  : 0}%
+              </span>
             </div>
           </div>
         </div>
@@ -83,10 +139,9 @@ const StudentReports = () => {
         {/* Subject Performance Card */}
         <div className="content-card">
           <div className="card-header">
-            <h2 className="card-title">Subject Performance</h2>
+            <h2 className="card-title">Subject Progress</h2>
           </div>
           <div className="chart-container">
-            {/* Placeholder for chart */}
             <div className="chart-placeholder">
               <span className="chart-icon">📈</span>
             </div>
@@ -99,10 +154,10 @@ const StudentReports = () => {
                   <div className="progress-bar">
                     <div 
                       className="progress-fill" 
-                      style={{ width: `${70 + subject.id * 5}%` }}
+                      style={{ width: `${subject.progress}%` }}
                     ></div>
                   </div>
-                  <span className="progress-value">{70 + subject.id * 5}%</span>
+                  <span className="progress-value">{subject.progress}%</span>
                 </div>
               </div>
             ))}
@@ -126,34 +181,17 @@ const StudentReports = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Responsive Website Project</td>
-                  <td>HTML & CSS Fundamentals</td>
-                  <td>Apr 15, 2025</td>
-                  <td>Apr 15, 2025</td>
-                  <td className="performance-text excellent">92%</td>
-                </tr>
-                <tr>
-                  <td>DOM Manipulation Challenge</td>
-                  <td>JavaScript Essentials</td>
-                  <td>Apr 5, 2025</td>
-                  <td>Apr 4, 2025</td>
-                  <td className="performance-text good">85%</td>
-                </tr>
-                <tr>
-                  <td>Component Architecture Quiz</td>
-                  <td>React Framework</td>
-                  <td>Mar 30, 2025</td>
-                  <td>Mar 29, 2025</td>
-                  <td className="performance-text average">72%</td>
-                </tr>
-                <tr>
-                  <td>API Integration Project</td>
-                  <td>Backend Development with Node.js</td>
-                  <td>Mar 15, 2025</td>
-                  <td>Mar 15, 2025</td>
-                  <td className="performance-text excellent">95%</td>
-                </tr>
+                {recentGrades.map(grade => (
+                  <tr key={grade._id}>
+                    <td>{grade.assignmentTitle}</td>
+                    <td>{grade.courseName}</td>
+                    <td>{new Date(grade.deadline).toLocaleDateString()}</td>
+                    <td>{new Date(grade.submissionDate).toLocaleDateString()}</td>
+                    <td className={`performance-text ${getPerformanceClass(grade.marks, grade.totalMarks)}`}>
+                      {grade.marks !== undefined ? `${grade.marks}/${grade.totalMarks}` : grade.grade}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -163,4 +201,14 @@ const StudentReports = () => {
   );
 };
 
-export default StudentReports; 
+// Helper function to determine performance class
+const getPerformanceClass = (marks, totalMarks) => {
+  if (marks === undefined || totalMarks === undefined) return 'good';
+  const percentage = (marks / totalMarks) * 100;
+  if (percentage >= 90) return 'excellent';
+  if (percentage >= 80) return 'good';
+  if (percentage >= 70) return 'average';
+  return 'poor';
+};
+
+export default StudentReports;

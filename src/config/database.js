@@ -32,7 +32,7 @@ const config = {
       // Submission endpoints
       submissions: '/submissions',
       submission: '/submissions',
-      studentSubmissions: '/submissions/student',
+      studentSubmissions: '/submissions/student', // Added this endpoint
       instructorSubmissions: '/submissions/instructor',
       
       // Student endpoints
@@ -73,4 +73,4 @@ export const switchDatabase = (type) => {
   config.databaseType = type;
 };
 
-export default config; 
+export default config;

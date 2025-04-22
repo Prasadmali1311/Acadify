@@ -8,7 +8,7 @@ const TeacherDashboard = () => {
   const { currentUser } = useAuth();
   const [activeClasses, setActiveClasses] = useState(0);
   const [assignmentsToGrade, setAssignmentsToGrade] = useState(0);
-  const [studentEngagement, setStudentEngagement] = useState(0);
+  const [totalAssignments, setTotalAssignments] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -44,21 +44,23 @@ const TeacherDashboard = () => {
         const assignmentsResponse = await axios.get(getApiUrl('teacherAssignments'), {
           params: { instructorId: currentUser.id }
         });
+        const assignments = assignmentsResponse.data;
+        
+        // Set total assignments count
+        setTotalAssignments(assignments.length);
         
         // Get all submissions for these assignments
-        const assignmentIds = assignmentsResponse.data.map(assignment => assignment._id);
+        const assignmentIds = assignments.map(assignment => assignment._id);
         const submissionsResponse = await axios.get(getApiUrl('submissions'), {
           params: { assignmentId: { $in: assignmentIds } }
         });
+        const submissions = submissionsResponse.data;
         
         // Filter submissions that are submitted but not graded
-        const pendingSubmissions = submissionsResponse.data.filter(
+        const pendingSubmissions = submissions.filter(
           submission => !submission.grade && !submission.marks
         );
         setAssignmentsToGrade(pendingSubmissions.length);
-
-        // Calculate student engagement (placeholder for now)
-        setStudentEngagement(92);
 
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -124,11 +126,11 @@ const TeacherDashboard = () => {
         </div>
 
         <div className="stat-card purple">
-          <h3 className="stat-title text-purple-600">Student Engagement</h3>
-          <p className="stat-value">{studentEngagement}%</p>
+          <h3 className="stat-title text-purple-600">Total Assignments</h3>
+          <p className="stat-value">{totalAssignments}</p>
           <p className="stat-trend">
             <span className="trend-indicator trend-up">
-              <span className="text-lg">↑</span> 7%
+              <span className="text-lg">↑</span> 2
             </span>
             <span className="text-gray-500">from last month</span>
           </p>
@@ -187,4 +189,4 @@ const TeacherDashboard = () => {
   );
 };
 
-export default TeacherDashboard; 
+export default TeacherDashboard;

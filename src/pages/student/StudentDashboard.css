@@ -290,38 +290,49 @@
   margin-bottom: 0;
 }
 
-.deadline-item.high-priority {
-  background-color: #eff6ff;
+.priority-badge.high {
+  background-color: #ffe9e0;
+  color: #a05d19;
 }
 
-.deadline-item.medium-priority {
-  background-color: #f5f3ff;
+.priority-badge.medium {
+  background-color: #f9f9cd;
+  color: #a4bd02;
 }
 
-.deadline-item.low-priority {
-  background-color: #f0fdf4;
+.priority-badge.low {
+  background-color: #e9fff0;
+  color: #1dd15f;
+}
+
+.deadline-item .flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.deadline-item .flex > div {
+  flex: 1;
+  min-width: 0; /* Prevent text overflow */
+}
+
+.deadline-item .font-medium {
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .priority-badge {
+  /* background-color: #fcdcdc; */
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
   font-weight: 500;
-}
-
-.priority-badge.high {
-  background-color: #dbeafe;
-  color: #1d4ed8;
-}
-
-.priority-badge.medium {
-  background-color: #ede9fe;
-  color: #7c3aed;
-}
-
-.priority-badge.low {
-  background-color: #dcfce7;
-  color: #15803d;
+  white-space: nowrap;
+  flex-shrink: 0; /* Prevent badge from shrinking */
+  margin-left: 1rem; /* Add some space between text and badge */
 }
 
 /* Course styles for student */
