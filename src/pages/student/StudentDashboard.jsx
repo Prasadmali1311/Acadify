@@ -10,19 +10,14 @@ const StudentDashboard = () => {
   const [completedAssignments, setCompletedAssignments] = useState(0);
   const [averageScore, setAverageScore] = useState(0);
   const [recentActivities, setRecentActivities] = useState([]);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Get user's first name
   const getUserFirstName = () => {
     if (!currentUser) return 'User';
-    
-    // If we have first name in user data
-    if (currentUser.firstName) {
-      return currentUser.firstName;
-    }
-    
-    // Fallback to email
+    if (currentUser.firstName) return currentUser.firstName;
     return currentUser.email ? currentUser.email.split('@')[0] : 'User';
   };
 
@@ -34,13 +29,25 @@ const StudentDashboard = () => {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (minutes < 60) {
-      return `${minutes} minutes ago`;
-    } else if (hours < 24) {
-      return `${hours} hours ago`;
-    } else {
-      return `${days} days ago`;
-    }
+    if (minutes < 60) return `${minutes} minutes ago`;
+    if (hours < 24) return `${hours} hours ago`;
+    return `${days} days ago`;
+  };
+
+  // Calculate days until deadline
+  const getDaysUntilDeadline = (deadline) => {
+    const now = new Date();
+    const deadlineDate = new Date(deadline);
+    const diffTime = deadlineDate - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Get priority based on days until deadline
+  const getPriority = (daysUntil) => {
+    if (daysUntil <= 3) return 'high';
+    if (daysUntil <= 7) return 'medium';
+    return 'low';
   };
 
   // Fetch dashboard data
@@ -57,8 +64,9 @@ const StudentDashboard = () => {
           params: { email: currentUser.email }
         });
 
-        // Calculate statistics
         const assignments = assignmentsResponse.data;
+        
+        // Calculate statistics
         const pending = assignments.filter(assignment => assignment.status === 'pending').length;
         const completed = assignments.filter(assignment => assignment.status === 'graded').length;
         
@@ -71,52 +79,52 @@ const StudentDashboard = () => {
         setCompletedAssignments(completed);
         setAverageScore(avgScore);
 
-        // Fetch recent submissions
-        const submissionsResponse = await axios.get(getApiUrl('submissions'), {
-          params: { studentEmail: currentUser.email }
-        });
+        // Process upcoming deadlines
+        const pendingAssignments = assignments.filter(assignment => assignment.status === 'pending');
+        const now = new Date();
+        const upcoming = pendingAssignments
+          .filter(assignment => new Date(assignment.deadline) > now)
+          .map(assignment => {
+            const daysUntil = getDaysUntilDeadline(assignment.deadline);
+            return {
+              id: assignment._id,
+              title: assignment.title,
+              daysUntil: daysUntil,
+              deadline: assignment.deadline,
+              priority: getPriority(daysUntil)
+            };
+          })
+          .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+          .slice(0, 3); // Get top 3 upcoming deadlines
 
-        // Fetch enrolled courses
-        const enrollmentsResponse = await axios.get(getApiUrl('enrolledCourses'), {
-          params: { email: currentUser.email }
-        });
+        setUpcomingDeadlines(upcoming);
 
-        // Process activities
-        const activities = [];
-        
-        // Add submission activities
-        submissionsResponse.data.forEach(submission => {
-          // Skip submissions without proper data
-          if (!submission.assignmentTitle || !submission.submissionDate) return;
-
-          activities.push({
-            id: `submission-${submission._id}`,
-            title: `${submission.assignmentTitle} ${submission.grade ? 'graded' : 'submitted'}`,
-            time: formatTimeDifference(submission.submissionDate),
-            status: submission.grade ? 'graded' : 'submitted'
-          });
-        });
-
-        // Add enrollment activities
-        enrollmentsResponse.data.forEach(course => {
-          const studentData = course.students.find(s => s.email === currentUser.email.toLowerCase());
-          if (studentData) {
-            activities.push({
-              id: `enrollment-${course._id}`,
-              title: `Enrolled in ${course.name}`,
-              time: formatTimeDifference(studentData.enrolledAt),
+        // Process recent activities
+        const activities = [
+          // Get most recent graded assignments
+          ...assignments
+            .filter(assignment => assignment.status === 'graded')
+            .map(assignment => ({
+              id: `graded-${assignment._id}`,
+              title: `${assignment.title} - Graded: ${assignment.grade}${assignment.marks ? ` (${assignment.marks}/${assignment.totalMarks})` : ''}`,
+              time: formatTimeDifference(assignment.gradedDate || assignment.submissionDate),
               status: 'completed'
-            });
-          }
-        });
+            })),
+          // Get recent submissions
+          ...assignments
+            .filter(assignment => assignment.status === 'submitted')
+            .map(assignment => ({
+              id: `submitted-${assignment._id}`,
+              title: `${assignment.title} - Submitted`,
+              time: formatTimeDifference(assignment.submissionDate),
+              status: 'submitted'
+            }))
+        ]
+        .sort((a, b) => new Date(b.time) - new Date(a.time))
+        .slice(0, 3);
 
-        // Sort activities by time (newest first) and take the 3 most recent
-        const sortedActivities = activities
-          .sort((a, b) => new Date(b.time) - new Date(a.time))
-          .slice(0, 3);
-
-        setRecentActivities(sortedActivities);
-
+        setRecentActivities(activities);
+        setError('');
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data');
@@ -204,6 +212,9 @@ const StudentDashboard = () => {
                 </span>
               </div>
             ))}
+            {recentActivities.length === 0 && (
+              <div className="no-activities">No recent activities</div>
+            )}
           </div>
         </div>
 
@@ -213,24 +224,24 @@ const StudentDashboard = () => {
             <button className="view-all-button">View all →</button>
           </div>
           <div className="space-y-4">
-            <div className="deadline-item high-priority">
-              <div className="flex">
-                <div>
-                  <h4 className="font-medium text-blue-900">Node.js API Project</h4>
-                  <p className="text-sm text-blue-700">Due in 5 days</p>
+            {upcomingDeadlines.map((deadline) => (
+              <div key={deadline.id} className={`deadline-item ${deadline.priority}-priority`}>
+                <div className="flex">
+                  <div>
+                    <h4 className="font-medium text-blue-900">{deadline.title}</h4>
+                    <p className="text-sm text-blue-700">
+                      Due in {deadline.daysUntil} {deadline.daysUntil === 1 ? 'day' : 'days'}
+                    </p>
+                  </div>
+                  <span className={`priority-badge ${deadline.priority}`}>
+                    {deadline.priority.charAt(0).toUpperCase() + deadline.priority.slice(1)} Priority
+                  </span>
                 </div>
-                <span className="priority-badge high">High Priority</span>
               </div>
-            </div>
-            <div className="deadline-item medium-priority">
-              <div className="flex">
-                <div>
-                  <h4 className="font-medium text-purple-900">React State Management Exercise</h4>
-                  <p className="text-sm text-purple-700">Due in 1 week</p>
-                </div>
-                <span className="priority-badge medium">Medium Priority</span>
-              </div>
-            </div>
+            ))}
+            {upcomingDeadlines.length === 0 && (
+              <div className="no-deadlines">No upcoming deadlines</div>
+            )}
           </div>
         </div>
       </div>
@@ -238,4 +249,4 @@ const StudentDashboard = () => {
   );
 };
 
-export default StudentDashboard; 
+export default StudentDashboard;

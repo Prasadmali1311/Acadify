@@ -264,6 +264,22 @@
   color: #854d0e;
 }
 
+.status-badge.submitted {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.no-activities,
+.no-deadlines {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px dashed #e5e7eb;
+}
+
 .deadline-item {
   padding: 1rem;
   border-radius: 0.5rem;
@@ -367,4 +383,4 @@
   height: 100%;
   background-color: #2563eb;
   border-radius: 9999px;
-} 
+}
