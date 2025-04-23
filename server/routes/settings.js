@@ -1,6 +1,7 @@
 import express from 'express';
 import Settings from '../models/Settings.js';
 import jwt from 'jsonwebtoken';
+import process from 'process';
 
 const router = express.Router();
 
@@ -130,4 +131,4 @@ router.post('/reset', async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

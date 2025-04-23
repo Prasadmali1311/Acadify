@@ -48,7 +48,7 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
     console.error('Error:', err);
     // Ensure all errors return JSON
     res.status(500).json({ 

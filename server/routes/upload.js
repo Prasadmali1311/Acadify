@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { Readable } from 'stream';
 import mongoose from 'mongoose';
 import { Busboy } from '@fastify/busboy';
+import { Buffer } from 'buffer';
 
 const router = express.Router();
 
