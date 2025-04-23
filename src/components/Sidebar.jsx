@@ -12,7 +12,13 @@ const Sidebar = () => {
     const commonItems = [
       { path: '/', label: 'Dashboard', icon: '📊' },
       { path: '/files', label: 'Files', icon: '📁' },
+    ];
+
+    const studentItems = [
+      ...commonItems,
       { path: '/reports', label: 'Reports', icon: '📈' },
+      { path: '/student/courses', label: 'Courses', icon: '📚' },
+      { path: '/student/assignments', label: 'Assignments', icon: '📝' },
     ];
 
     const commonFooterItems = [
@@ -32,11 +38,7 @@ const Sidebar = () => {
     }
 
     return {
-      mainItems: [
-        ...commonItems,
-        { path: '/student/courses', label: 'Courses', icon: '📚' },
-        { path: '/student/assignments', label: 'Assignments', icon: '📝' },
-      ],
+      mainItems: studentItems,
       footerItems: commonFooterItems
     };
   };

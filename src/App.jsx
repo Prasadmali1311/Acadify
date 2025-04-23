@@ -21,7 +21,6 @@ import TeacherStudents from './pages/teacher/Students';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import TeacherAssignments from './pages/teacher/TeacherAssignments';
 import TeacherStudentSubmissions from './pages/teacher/TeacherStudentSubmissions';
-import TeacherReports from './pages/teacher/TeacherReports';
 
 // Common pages
 import Settings from './pages/Settings';
@@ -43,8 +42,10 @@ function App() {
             {/* Dashboard route */}
             <Route path="dashboard" element={<RoleBasedDashboard />} />
             
-            {/* Reports route - accessible by all roles */}
-            <Route path="reports" element={<RoleBasedReports />} />
+            {/* Reports route - only accessible by students */}
+            <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+              <Route path="reports" element={<RoleBasedReports />} />
+            </Route>
             
             {/* Student routes - only accessible by students */}
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
@@ -68,7 +69,6 @@ function App() {
                 <Route path="students/:studentEmail/submissions" element={<TeacherStudentSubmissions />} />
                 <Route path="profile" element={<TeacherProfile />} />
                 <Route path="assignments" element={<TeacherAssignments />} />
-                <Route path="reports" element={<TeacherReports />} />
               </Route>
             </Route>
 

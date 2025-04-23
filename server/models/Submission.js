@@ -43,8 +43,19 @@ const submissionSchema = new mongoose.Schema({
   gradedDate: {
     type: Date
   }
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Add virtual for assignment details
+submissionSchema.virtual('assignment', {
+  ref: 'Assignment',
+  localField: 'assignmentId',
+  foreignField: '_id',
+  justOne: true
 });
 
 const Submission = mongoose.model('Submission', submissionSchema);
 
-export default Submission; 
+export default Submission;

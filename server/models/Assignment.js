@@ -37,8 +37,8 @@ const assignmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'submitted', 'graded'],
-    default: 'pending'
+    enum: ['draft', 'active', 'pending', 'submitted', 'graded'],
+    default: 'draft'
   },
   createdAt: {
     type: Date,
@@ -48,4 +48,4 @@ const assignmentSchema = new mongoose.Schema({
 
 const Assignment = mongoose.model('Assignment', assignmentSchema);
 
-export default Assignment; 
+export default Assignment;

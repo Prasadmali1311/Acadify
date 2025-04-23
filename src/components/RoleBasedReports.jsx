@@ -1,5 +1,4 @@
 import { useAuth } from '../contexts/AuthContext';
-import TeacherReports from '../pages/teacher/TeacherReports';
 import StudentReports from '../pages/student/StudentReports';
 import { Navigate } from 'react-router-dom';
 
@@ -14,15 +13,13 @@ const RoleBasedReports = () => {
   // Get user role from profile
   const userRole = currentUser.profile?.role || 'student';
 
-  // Render reports based on role
+  // Only allow students to access reports
   switch (userRole.toLowerCase()) {
-    case 'teacher':
-      return <TeacherReports />;
     case 'student':
       return <StudentReports />;
     default:
-      return <StudentReports />;
+      return <Navigate to="/unauthorized" replace />;
   }
 };
 
-export default RoleBasedReports; 
+export default RoleBasedReports;

@@ -8,7 +8,7 @@ const router = express.Router();
 // Get all submissions
 router.get('/', async (req, res) => {
   try {
-    const submissions = await Submission.find();
+    const submissions = await Submission.find().populate('assignmentId');
     res.status(200).json(submissions);
   } catch (error) {
     console.error('Error fetching submissions:', error);
@@ -24,17 +24,22 @@ router.get('/student', async (req, res) => {
       return res.status(400).json({ error: 'Student email is required' });
     }
 
-    // Find student's submissions
+    console.log(`[STUDENT SUBMISSIONS] Fetching submissions for: ${email}`);
     const studentEmail = email.toLowerCase();
     const studentSubmissions = await Submission.find({ studentEmail })
-      .populate('assignmentId', 'title courseName totalMarks deadline');
+      .populate({
+        path: 'assignmentId',
+        select: 'title courseName totalMarks deadline',
+        model: 'Assignment'
+      });
 
-    // Format submissions with assignment details
+    console.log(`[STUDENT SUBMISSIONS] Found ${studentSubmissions.length} submissions`);
+
     const formattedSubmissions = studentSubmissions.map(sub => ({
       _id: sub._id,
       assignmentId: sub.assignmentId?._id,
-      assignmentTitle: sub.assignmentId?.title || 'N/A',
-      courseName: sub.assignmentId?.courseName || 'N/A',
+      assignmentTitle: sub.assignmentId?.title || 'Assignment not found',
+      courseName: sub.assignmentId?.courseName || 'Course not found',
       deadline: sub.assignmentId?.deadline,
       totalMarks: sub.assignmentId?.totalMarks || 100,
       content: sub.content,
@@ -61,16 +66,34 @@ router.get('/instructor', async (req, res) => {
       return res.status(400).json({ error: 'Instructor ID is required' });
     }
 
-    // Get assignments created by this instructor
     const assignments = await Assignment.find({ instructorId });
-    const assignmentIds = assignments.map(assignment => assignment._id.toString());
-    
-    // Get submissions for those assignments
+    const assignmentIds = assignments.map(assignment => assignment._id);
+
     const submissions = await Submission.find({
       assignmentId: { $in: assignmentIds }
+    }).populate({
+      path: 'assignmentId',
+      select: 'title courseName totalMarks deadline instructorName',
+      model: 'Assignment'
     });
-    
-    res.status(200).json(submissions);
+
+    const formattedSubmissions = submissions.map(sub => ({
+      _id: sub._id,
+      studentEmail: sub.studentEmail,
+      content: sub.content,
+      fileIds: sub.fileIds,
+      submissionDate: sub.submissionDate,
+      marks: sub.marks,
+      totalMarks: sub.assignmentId?.totalMarks || 100,
+      grade: sub.grade,
+      feedback: sub.feedback,
+      gradedDate: sub.gradedDate,
+      assignmentTitle: sub.assignmentId?.title || 'Assignment not found',
+      courseName: sub.assignmentId?.courseName || 'Course not found',
+      assignmentId: sub.assignmentId?._id
+    }));
+
+    res.status(200).json(formattedSubmissions);
   } catch (error) {
     console.error('Error fetching instructor submissions:', error);
     res.status(500).json({ error: 'Error fetching instructor submissions' });
@@ -128,7 +151,10 @@ router.get('/teacher/student/:studentEmail', async (req, res) => {
     const studentSubmissions = await Submission.find({
       studentEmail: lowerCaseStudentEmail,
       assignmentId: { $in: assignmentIds }
-    }).populate('assignmentId', 'title courseName totalMarks'); // Added totalMarks to populated fields
+    }).populate({
+      path: 'assignmentId',
+      select: 'title courseName totalMarks deadline'
+    });
     console.log(`[SUBMISSIONS] Found ${studentSubmissions.length} submissions matching criteria.`);
 
     // 5. Format the response
@@ -139,7 +165,7 @@ router.get('/teacher/student/:studentEmail', async (req, res) => {
         fileIds: sub.fileIds,
         submissionDate: sub.submissionDate,
         marks: sub.marks,
-        totalMarks: sub.assignmentId?.totalMarks || 100, // Include totalMarks from assignment
+        totalMarks: sub.assignmentId?.totalMarks || 100,
         grade: sub.grade,
         feedback: sub.feedback,
         gradedDate: sub.gradedDate,

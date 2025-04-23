@@ -100,7 +100,7 @@ const TeacherAssignments = () => {
         
         return {
           id: assignment._id,
-          title: assignment.title || 'Untitled Assignment',
+          title: assignment.title,
           class: assignment.courseName || 'Unknown Class',
           description: assignment.description || 'No description provided',
           publishedDate: assignment.createdAt ? new Date(assignment.createdAt).toISOString().split('T')[0] : 'Unknown',
@@ -544,4 +544,4 @@ const TeacherAssignments = () => {
   );
 };
 
-export default TeacherAssignments; 
+export default TeacherAssignments;
