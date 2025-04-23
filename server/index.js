@@ -11,7 +11,6 @@ import assignmentRoutes from './routes/assignments.js';
 import submissionRoutes from './routes/submissions.js';
 import userRoutes from './routes/users.js';
 import settingsRoutes from './routes/settings.js';
-import multer from 'multer';
 import { connectDB } from './db.js';
 import process from 'process';
 
@@ -51,9 +50,6 @@ app.use('/api/settings', settingsRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err);
-    if (err instanceof multer.MulterError) {
-        return res.status(400).json({ error: err.message });
-    }
     // Ensure all errors return JSON
     res.status(500).json({ 
         error: 'Something went wrong!',
@@ -70,8 +66,8 @@ const startServer = async () => {
     }
 
     app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+        console.log(`Server is running on port ${PORT}`);
     });
 };
 
-startServer(); 
+startServer();

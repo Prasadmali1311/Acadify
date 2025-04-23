@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './TeacherReports.css';
+// import './TeacherReports.css';
 
 const TeacherReports = () => {
   const [selectedClass, setSelectedClass] = useState('all');
@@ -13,7 +13,7 @@ const TeacherReports = () => {
     { id: 4, name: 'Backend Development with Node.js' },
   ];
 
-  // Sample student data (would come from Firebase in a real app)
+  // Sample student data (would come from MongoDB in a real app)
   const students = [
     { id: 1, name: 'Alex Johnson', grade: 92, status: 'excellent', lastActivity: '1 day ago', assignmentsCompleted: '16/16' },
     { id: 2, name: 'Sam Thompson', grade: 85, status: 'good', lastActivity: '3 days ago', assignmentsCompleted: '14/16' },
@@ -198,4 +198,4 @@ const TeacherReports = () => {
   );
 };
 
-export default TeacherReports; 
+export default TeacherReports;

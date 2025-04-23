@@ -1,25 +1,12 @@
 import express from 'express';
-import multer from 'multer';
 import { bucket } from '../db.js';
 import path from 'path';
 import crypto from 'crypto';
 import { Readable } from 'stream';
 import mongoose from 'mongoose';
+import { Busboy } from '@fastify/busboy';
 
 const router = express.Router();
-
-// Configure multer storage
-const storage = multer.memoryStorage();
-const upload = multer({ 
-    storage,
-    fileFilter: (req, file, cb) => {
-        // Allow all file types
-        cb(null, true);
-    },
-    limits: {
-        fileSize: 50 * 1024 * 1024 // 50MB limit
-    }
-});
 
 // Get all files
 router.get('/files', async (req, res) => {
@@ -41,61 +28,92 @@ router.get('/files', async (req, res) => {
 });
 
 // Upload file
-router.post('/upload', upload.single('file'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-    }
+router.post('/upload', async (req, res) => {
+    const busboy = new Busboy({ 
+        headers: req.headers,
+        limits: {
+            fileSize: 50 * 1024 * 1024 // 50MB limit
+        }
+    });
 
     try {
-        // Get user email from request body
-        const userEmail = req.body.userEmail || 'anonymous';
-        
-        // Create a unique filename
-        const filename = crypto.randomBytes(16).toString('hex') + path.extname(req.file.originalname);
-        
-        // Create upload stream with user email in metadata
-        const uploadStream = bucket.openUploadStream(filename, {
-            contentType: req.file.mimetype,
-            metadata: {
-                originalName: req.file.originalname,
-                userEmail: userEmail, // Store the user email in metadata
-                uploadedAt: new Date()
+        let fileBuffer;
+        let mimeType;
+        let originalName;
+        let userEmail = 'anonymous';
+
+        busboy.on('field', (fieldname, val) => {
+            if (fieldname === 'userEmail') {
+                userEmail = val;
             }
         });
-        
-        // Convert buffer to stream
-        const readableFileStream = new Readable();
-        readableFileStream.push(req.file.buffer);
-        readableFileStream.push(null);
-        
-        // Pipe the file data to GridFS
-        readableFileStream.pipe(uploadStream);
-        
-        // Return success response when upload is complete
-        uploadStream.on('finish', () => {
-            const fileInfo = {
-                filename: filename,
-                originalName: req.file.originalname,
-                contentType: req.file.mimetype,
-                size: req.file.size,
-                id: uploadStream.id,
-                uploadDate: new Date(),
-                userEmail: userEmail,
-                fileId: uploadStream.id.toString() // Add fileId to response
-            };
-            
-            return res.status(200).json({
-                message: 'File uploaded successfully',
-                file: fileInfo,
-                fileId: uploadStream.id.toString()
+
+        busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+            const chunks = [];
+            mimeType = mimetype;
+            originalName = filename;
+
+            file.on('data', (chunk) => {
+                chunks.push(chunk);
+            });
+
+            file.on('end', () => {
+                fileBuffer = Buffer.concat(chunks);
             });
         });
-        
-        // Handle upload error
-        uploadStream.on('error', (error) => {
-            console.error('Upload error:', error);
-            return res.status(500).json({ error: 'Error uploading file' });
+
+        busboy.on('finish', async () => {
+            if (!fileBuffer) {
+                return res.status(400).json({ error: 'No file uploaded' });
+            }
+
+            // Create a unique filename
+            const filename = crypto.randomBytes(16).toString('hex') + path.extname(originalName);
+            
+            // Create upload stream with user email in metadata
+            const uploadStream = bucket.openUploadStream(filename, {
+                contentType: mimeType,
+                metadata: {
+                    originalName: originalName,
+                    userEmail: userEmail,
+                    uploadedAt: new Date()
+                }
+            });
+            
+            // Convert buffer to stream
+            const readableFileStream = new Readable();
+            readableFileStream.push(fileBuffer);
+            readableFileStream.push(null);
+            
+            // Pipe the file data to GridFS
+            readableFileStream.pipe(uploadStream);
+            
+            uploadStream.on('finish', () => {
+                const fileInfo = {
+                    filename: filename,
+                    originalName: originalName,
+                    contentType: mimeType,
+                    size: fileBuffer.length,
+                    id: uploadStream.id,
+                    uploadDate: new Date(),
+                    userEmail: userEmail,
+                    fileId: uploadStream.id.toString()
+                };
+                
+                return res.status(200).json({
+                    message: 'File uploaded successfully',
+                    file: fileInfo,
+                    fileId: uploadStream.id.toString()
+                });
+            });
+            
+            uploadStream.on('error', (error) => {
+                console.error('Upload error:', error);
+                return res.status(500).json({ error: 'Error uploading file' });
+            });
         });
+
+        req.pipe(busboy);
     } catch (error) {
         console.error('Error handling upload:', error);
         return res.status(500).json({ error: 'Server error processing upload' });
@@ -217,4 +235,4 @@ router.get('/files/id/:fileId', async (req, res) => {
     }
 });
 
-export default router; 
+export default router;

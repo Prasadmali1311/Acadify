@@ -2,29 +2,55 @@ import express from 'express';
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import multer from 'multer';
 import { bucket } from '../db.js';
 import { Readable } from 'stream';
 import path from 'path';
 import crypto from 'crypto';
+import { Busboy } from '@fastify/busboy';
 
 const router = express.Router();
 
-// Configure multer for photo uploads
-const storage = multer.memoryStorage();
-const upload = multer({ 
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  }
-});
+// Helper function to handle file upload
+const handleFileUpload = (req) => {
+    return new Promise((resolve, reject) => {
+        const busboy = new Busboy({ 
+            headers: req.headers,
+            limits: {
+                fileSize: 5 * 1024 * 1024, // 5MB limit
+                files: 1 // Only allow 1 file
+            }
+        });
+
+        let fileBuffer;
+        let mimeType;
+        let originalName;
+
+        busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+            if (!mimetype.startsWith('image/')) {
+                file.resume(); // Skip this file
+                return reject(new Error('Only image files are allowed!'));
+            }
+
+            const chunks = [];
+            mimeType = mimetype;
+            originalName = filename;
+
+            file.on('data', (chunk) => chunks.push(chunk));
+            file.on('end', () => {
+                fileBuffer = Buffer.concat(chunks);
+            });
+        });
+
+        busboy.on('finish', () => {
+            if (!fileBuffer) {
+                return reject(new Error('No file uploaded'));
+            }
+            resolve({ fileBuffer, mimeType, originalName });
+        });
+
+        req.pipe(busboy);
+    });
+};
 
 // Login user
 router.post('/login', async (req, res) => {
@@ -165,6 +191,113 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Update user profile
+router.put('/profile', async (req, res) => {
+    try {
+        // Get token from Authorization header
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Find user
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Handle file upload if present
+        if (req.headers['content-type']?.includes('multipart/form-data')) {
+            try {
+                const { fileBuffer, mimeType, originalName } = await handleFileUpload(req);
+
+                // Delete old photo if it exists
+                if (user.photoURL) {
+                    try {
+                        const oldFilename = path.basename(user.photoURL);
+                        const files = await bucket.find({ filename: oldFilename }).toArray();
+                        if (files && files.length > 0) {
+                            await bucket.delete(files[0]._id);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting old photo:', error);
+                        // Continue with upload even if delete fails
+                    }
+                }
+
+                // Create a unique filename
+                const filename = crypto.randomBytes(16).toString('hex') + path.extname(originalName);
+                
+                // Create upload stream
+                const uploadStream = bucket.openUploadStream(filename, {
+                    contentType: mimeType,
+                    metadata: {
+                        originalName: originalName,
+                        userId: user._id.toString(),
+                        uploadedAt: new Date()
+                    }
+                });
+                
+                // Convert buffer to stream
+                const readableFileStream = new Readable();
+                readableFileStream.push(fileBuffer);
+                readableFileStream.push(null);
+                
+                // Pipe the file data to GridFS
+                readableFileStream.pipe(uploadStream);
+                
+                // Wait for upload to complete
+                await new Promise((resolve, reject) => {
+                    uploadStream.on('finish', resolve);
+                    uploadStream.on('error', reject);
+                });
+
+                // Update user's photoURL with filename
+                user.photoURL = `http://localhost:5000/api/upload/file/${filename}`;
+            } catch (error) {
+                console.error('Error uploading profile photo:', error);
+                return res.status(400).json({ error: error.message });
+            }
+        }
+
+        // Update other fields
+        const updates = req.body;
+        Object.keys(updates).forEach(key => {
+            if (key !== 'password' && key !== '_id') {
+                user[key] = updates[key];
+            }
+        });
+
+        // Save updated user
+        await user.save();
+
+        // Return updated user data (excluding password)
+        const userData = {
+            id: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            mobileNumber: user.mobileNumber,
+            role: user.role,
+            photoURL: user.photoURL
+        };
+
+        res.status(200).json({ user: userData });
+    } catch (error) {
+        console.error('Profile update error:', error);
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        res.status(500).json({ 
+            error: 'Error updating profile',
+            details: error.message 
+        });
+    }
+});
+
 // Get user profile
 router.get('/profile', async (req, res) => {
   try {
@@ -209,105 +342,4 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-// Update user profile
-router.put('/profile', upload.single('photo'), async (req, res) => {
-  try {
-    // Get token from Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Find user by ID
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Update user data
-    const { firstName, lastName, mobileNumber } = req.body;
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.mobileNumber = mobileNumber || user.mobileNumber;
-
-    // Handle photo upload if present
-    if (req.file) {
-      // Delete previous photo if it exists
-      if (user.photoURL) {
-        const previousFilename = user.photoURL.split('/').pop(); // Get filename from URL
-        try {
-          const files = await bucket.find({ filename: previousFilename }).toArray();
-          if (files.length > 0) {
-            await bucket.delete(files[0]._id);
-            console.log('Previous photo deleted:', previousFilename);
-          }
-        } catch (error) {
-          console.error('Error deleting previous photo:', error);
-          // Continue with upload even if delete fails
-        }
-      }
-
-      // Create a unique filename
-      const filename = crypto.randomBytes(16).toString('hex') + path.extname(req.file.originalname);
-      
-      // Create upload stream
-      const uploadStream = bucket.openUploadStream(filename, {
-        contentType: req.file.mimetype,
-        metadata: {
-          originalName: req.file.originalname,
-          userId: user._id.toString(),
-          uploadedAt: new Date()
-        }
-      });
-      
-      // Convert buffer to stream
-      const readableFileStream = new Readable();
-      readableFileStream.push(req.file.buffer);
-      readableFileStream.push(null);
-      
-      // Pipe the file data to GridFS
-      readableFileStream.pipe(uploadStream);
-      
-      // Wait for upload to complete
-      await new Promise((resolve, reject) => {
-        uploadStream.on('finish', resolve);
-        uploadStream.on('error', reject);
-      });
-
-      // Update user's photoURL with filename
-      user.photoURL = `http://localhost:5000/api/upload/file/${filename}`;
-    }
-
-    // Save updated user
-    await user.save();
-
-    // Return updated user data
-    res.status(200).json({
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        mobileNumber: user.mobileNumber,
-        role: user.role,
-        photoURL: user.photoURL
-      }
-    });
-  } catch (error) {
-    console.error('Update profile error:', error);
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    res.status(500).json({ 
-      error: 'Error updating profile',
-      details: error.message 
-    });
-  }
-});
-
-export default router; 
+export default router;

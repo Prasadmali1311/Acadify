@@ -24,7 +24,7 @@ A free, centralized e-learning platform for assignment submission and progress t
 ### Key Functionality
 
 #### Assignment Workflow:
-- Upload any file type (max 500MB via Firebase Storage).
+- Upload any file type (max 500MB via GridFS).
 - ZIP/folder upload for coding projects.
 - No resubmissions: Lock after grading.
 
@@ -34,25 +34,25 @@ A free, centralized e-learning platform for assignment submission and progress t
 - **Attendance Tracking:** Based on submission deadlines.
 
 #### Authentication:
-- Phone + email sign-up (Firebase Auth).
-- Phone number as a unique identifier.
+- JWT-based authentication with email/password.
+- Phone number as optional contact method.
 
 ## Technical Stack Recommendations
 
 | Component   | Tool(s) |
 |------------|--------|
-| **Frontend** | React.js (free, component-based) + Firebase UI for auth. |
-| **Backend** | Firebase Services (Auth, Firestore, Storage). |
-| **Reporting** | Chart.js (visualizations) + jsPDF (PDF exports). |
-| **Hosting** | Firebase Hosting (free tier). |
+| **Frontend** | React.js with Context API for state management |
+| **Backend** | Express.js + MongoDB (GridFS for file storage) |
+| **Reporting** | Chart.js (visualizations) + jsPDF (PDF exports) |
+| **Hosting** | Any VPS or cloud service with MongoDB support |
 
 ## Conceptual Data Model
 
 ### Users Collection:
 - `userID` (string)  
 - `role`: "student" | "instructor" | "admin"  
-- `phone` (unique)  
 - `email`  
+- `phone` (optional)  
 
 ### Assignments Collection:
 - `assignmentID` (string)  
@@ -87,31 +87,35 @@ A free, centralized e-learning platform for assignment submission and progress t
 
 ## Security Considerations
 
-### Firestore Rules:
-- Students can only read/write to their own submissions.
-- Instructors can only access their course’s data.
+### Access Control:
+- Role-based access control (RBAC) for all routes.
+- JWT verification middleware.
+- Rate limiting for API endpoints.
 
-### Phone Verification:
-- Cloud Function to block duplicate phone numbers during sign-up.
+### File Storage:
+- GridFS for secure file storage.
+- File type validation.
+- Size limits and quota management.
 
-### Storage Rules:
-- Restrict file access to authenticated users.
+### Data Protection:
+- Password hashing with bcrypt.
+- Input validation and sanitization.
+- XSS and CSRF protection.
 
 ## Revised Development Phases
 
 ### **Phase 1: Frontend and UI/UX Design**
-- Design wireframes and prototypes for all user roles (student, instructor, admin).
+- Design wireframes and prototypes for all user roles.
 - Build the frontend using React.js with a focus on:
   - Clean, intuitive navigation.
   - Responsive design (works on mobile + desktop).
-  - Placeholder components for backend integration.
+  - Component reusability.
 
-### **Phase 2: Backend and Authentication + User Roles**
-- Set up Firebase Firestore and Firebase Storage.
-- Implement Firebase Authentication with:
-  - Phone + email sign-up.
-  - Unique phone enforcement via Cloud Functions.
-- Define user roles (student, instructor, admin) and restrict access accordingly.
+### **Phase 2: Backend and Authentication**
+- Set up Express.js server with MongoDB.
+- Implement JWT-based authentication.
+- Set up GridFS for file storage.
+- Define user roles and access control.
 
 ### **Phase 3: Advanced Features**
 
@@ -124,15 +128,15 @@ A free, centralized e-learning platform for assignment submission and progress t
 - Students can upload multiple files or ZIP folders.
 
 #### **Notifications:**
-- Email/SMS reminders for deadlines (Firebase Cloud Messaging + Twilio for SMS).
+- Email notifications for deadlines and updates.
+- Optional SMS integration with third-party services.
 
 ## Challenges & Mitigations
 
 | Challenge | Solution |
 |-----------|----------|
-| Unique Phone Enforcement | Cloud Function to validate uniqueness. |
 | Large File Storage Costs | Client-side ZIP compression before upload. |
-| Complex Firestore Queries | Precompute metrics (e.g., store average grades). |
+| Complex MongoDB Queries | Precompute metrics (e.g., store average grades). |
 
 ## Future Expansion
 
