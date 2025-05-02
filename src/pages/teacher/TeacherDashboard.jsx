@@ -198,10 +198,10 @@ const TeacherDashboard = () => {
           </h1>
           <p className="welcome-subtitle">Here's what's happening with your classes</p>
         </div>
-        <button className="report-button">
+        {/* <button className="report-button">
           <span className="text-xl">📊</span>
           <span>Generate Report</span>
-        </button>
+        </button> */}
       </div>
 
       <div className="stats-grid">
@@ -243,7 +243,7 @@ const TeacherDashboard = () => {
         <div className="content-card">
           <div className="card-header">
             <h2 className="card-title">Recent Activity</h2>
-            <button className="view-all-button">View all →</button>
+            {/* <button className="view-all-button">View all →</button> */}
           </div>
           <div className="space-y-4">
             {recentActivities.map((activity) => (
@@ -266,7 +266,7 @@ const TeacherDashboard = () => {
         <div className="content-card">
           <div className="card-header">
             <h2 className="card-title">Upcoming Tasks</h2>
-            <button className="view-all-button">View all →</button>
+            {/* <button className="view-all-button">View all →</button> */}
           </div>
           <div className="space-y-4">
             {upcomingTasks.map((task) => (

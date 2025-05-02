@@ -4,17 +4,17 @@ import StudentAssignments from '../pages/student/StudentAssignments';
 import { Navigate } from 'react-router-dom';
 
 const RoleBasedAssignments = () => {
-  // const { currentUser } = useAuth();
+// const { currentUser } = useAuth();
 
-  // // If user is not authenticated, redirect to login
+  // If user is not authenticated, redirect to login
   // if (!currentUser) {
   //   return <Navigate to="login" />;
   // }
 
-  // // Get user role from profile
+  // Get user role from profile
   // const userRole = currentUser.profile?.role || 'student';
 
-  // // Render assignments based on role
+  // Render assignments based on role
   // switch (userRole.toLowerCase()) {
   //   case 'teacher':
   //     return <TeacherAssignments />;
@@ -24,7 +24,7 @@ const RoleBasedAssignments = () => {
   //     return <StudentAssignments />;
   // }
   const { userRole } = useAuth();
-    if (!userRole) {
+  if (!userRole) {
     return <Navigate to="login" />;
   }
 
@@ -40,4 +40,4 @@ const RoleBasedAssignments = () => {
   }
 };
 
-export default RoleBasedAssignments; 
+export default RoleBasedAssignments;

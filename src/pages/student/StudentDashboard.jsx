@@ -153,10 +153,10 @@ const StudentDashboard = () => {
           </h1>
           <p className="welcome-subtitle">Here's what's happening with your assignments</p>
         </div>
-        <button className="report-button">
+        {/* <button className="report-button">
           <span className="text-xl">📊</span>
           <span>Generate Report</span>
-        </button>
+        </button> */}
       </div>
 
       <div className="stats-grid">
@@ -198,7 +198,7 @@ const StudentDashboard = () => {
         <div className="content-card">
           <div className="card-header">
             <h2 className="card-title">Recent Activity</h2>
-            <button className="view-all-button">View all →</button>
+            {/* <button className="view-all-button">View all →</button> */}
           </div>
           <div className="space-y-4">
             {recentActivities.map((activity) => (
@@ -221,7 +221,7 @@ const StudentDashboard = () => {
         <div className="content-card">
           <div className="card-header">
             <h2 className="card-title">Upcoming Deadlines</h2>
-            <button className="view-all-button">View all →</button>
+            {/* <button className="view-all-button">View all →</button> */}
           </div>
           <div className="space-y-4">
             {upcomingDeadlines.map((deadline) => (

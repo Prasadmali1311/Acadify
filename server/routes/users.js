@@ -58,6 +58,7 @@ const handleFileUpload = (req) => {
 router.post('/login', async (req, res) => {
   console.log('Login route hit');
   console.log('Request body:', req.body);
+  console.log('JWT_SECRET being used:', process.env.JWT_SECRET);
   
   try {
     const { email, password } = req.body;

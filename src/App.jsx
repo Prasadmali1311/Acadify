@@ -57,8 +57,8 @@ function App() {
               </Route>
             </Route>
 
-            {/* Teacher routes - only accessible by teachers */}
-            <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
+            {/* Teacher routes - accessible by teachers and developers */}
+            <Route element={<ProtectedRoute allowedRoles={['teacher', 'developer']} />}>
               <Route path="teacher">
                 <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<TeacherDashboard />} />
@@ -72,8 +72,12 @@ function App() {
 
             {/* Common routes - accessible by all roles */}
             <Route path="settings" element={<Settings />} />
-            <Route path="upload" element={<FileUpload />} />
-            <Route path="files" element={<FileList />} />
+
+            {/* Developer-only routes */}
+            <Route element={<ProtectedRoute allowedRoles={['developer']} />}>
+              <Route path="upload" element={<FileUpload />} />
+              <Route path="files" element={<FileList />} />
+            </Route>
 
             {/* Redirect root to dashboard */}
             <Route index element={<Navigate to="/dashboard" replace />} />

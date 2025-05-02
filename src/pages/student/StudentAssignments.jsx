@@ -458,7 +458,7 @@ const StudentAssignments = () => {
                             </li>
                           ))}
                         </ul>
-                        {fileIds.length === 0 && (
+                        {/* {fileIds.length === 0 && (
                           <button
                             type="button"
                             className="upload-button"
@@ -506,7 +506,7 @@ const StudentAssignments = () => {
                           >
                             Upload Files
                           </button>
-                        )}
+                        )} */}
                         {fileIds.length > 0 && (
                           <div className="upload-success">
                             ✓ Files uploaded successfully

@@ -9,26 +9,33 @@ const Sidebar = () => {
   
   // Define navigation items based on role
   const getNavItems = () => {
-    const commonItems = [
-      { path: '/', label: 'Dashboard', icon: '📊' },
+    // Only show Files option for developers
+    const developerItems = [
       { path: '/files', label: 'Files', icon: '📁' },
     ];
 
     const studentItems = [
-      ...commonItems,
+      { path: '/', label: 'Dashboard', icon: '📊' },
       { path: '/reports', label: 'Reports', icon: '📈' },
       { path: '/student/courses', label: 'Courses', icon: '📚' },
       { path: '/student/assignments', label: 'Assignments', icon: '📝' },
     ];
 
     const commonFooterItems = [
-      { path: '/settings', label: 'Settings', icon: '⚙️' },
+      // { path: '/settings', label: 'Settings', icon: '⚙️' },
     ];
+
+    if (userRole === 'developer') {
+      return {
+        mainItems: developerItems,
+        footerItems: commonFooterItems
+      };
+    }
 
     if (userRole === 'teacher') {
       return {
         mainItems: [
-          ...commonItems,
+          { path: '/', label: 'Dashboard', icon: '📊' },
           { path: '/teacher/assignments', label: 'Assignments', icon: '📝' },
           { path: '/teacher/classes', label: 'Classes', icon: '👥' },
           { path: '/teacher/students', label: 'Students', icon: '🎓' },

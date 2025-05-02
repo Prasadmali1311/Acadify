@@ -11,9 +11,11 @@ const RoleBasedDashboard = () => {
       return <Navigate to="/teacher/dashboard" replace />;
     case 'admin':
       return <Navigate to="/admin/dashboard" replace />;
+    case 'developer':
+      return <Navigate to="/files" replace />;
     default:
       return <Navigate to="/unauthorized" replace />;
   }
 };
 
-export default RoleBasedDashboard; 
+export default RoleBasedDashboard;

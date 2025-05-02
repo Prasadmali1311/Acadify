@@ -99,9 +99,9 @@ const Header = () => {
         />
       </div>
       <div className="header-actions">
-        <button className="notification-button">
+        {/* <button className="notification-button">
           🔔
-        </button>
+        </button> */}
         <div className="user-profile-container" ref={profileMenuRef}>
           <div 
             className="user-profile" 
