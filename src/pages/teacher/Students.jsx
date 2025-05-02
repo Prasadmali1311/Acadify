@@ -27,7 +27,7 @@ const Students = () => {
         setIsLoading(false);
         return;
       }
-      
+
       if (currentUser.role !== 'teacher' || !currentUser.id) {
         setError('Access denied or Instructor ID not found.');
         setIsLoading(false);
@@ -38,7 +38,10 @@ const Students = () => {
 
       try {
         setIsLoading(true);
-        const coursesResponse = await axios.get(`${getApiUrl('courses')}?instructorId=${instructorId}`);
+        // Fetch only courses taught by this instructor
+        const coursesResponse = await axios.get(getApiUrl('instructorCourses'), {
+          params: { instructorId }
+        });
         
         if (coursesResponse.status !== 200) {
           throw new Error('Failed to fetch courses');
@@ -50,6 +53,7 @@ const Students = () => {
         const uniqueCourses = [...new Set(coursesData.map(course => course.name))];
         setCourses(uniqueCourses);
         
+        // Create a map of students and their course enrollments
         const allStudentsMap = new Map();
         coursesData.forEach(course => {
           course.students.forEach(student => {
@@ -61,7 +65,7 @@ const Students = () => {
             } else {
               const existingStudent = allStudentsMap.get(student.email);
               if (!existingStudent.courses.includes(course.name)) {
-                  existingStudent.courses.push(course.name);
+                existingStudent.courses.push(course.name);
               }
             }
           });
@@ -228,4 +232,4 @@ const Students = () => {
   );
 };
 
-export default Students; 
+export default Students;
