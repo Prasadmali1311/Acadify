@@ -37,7 +37,7 @@ const Sidebar = () => {
         mainItems: [
           { path: '/', label: 'Dashboard', icon: '📊' },
           { path: '/teacher/assignments', label: 'Assignments', icon: '📝' },
-          { path: '/teacher/classes', label: 'Classes', icon: '👥' },
+          { path: '/teacher/classes', label: 'Courses', icon: '👥' },
           { path: '/teacher/students', label: 'Students', icon: '🎓' },
         ],
         footerItems: commonFooterItems
