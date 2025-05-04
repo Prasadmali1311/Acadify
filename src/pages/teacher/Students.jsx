@@ -59,13 +59,22 @@ const Students = () => {
           course.students.forEach(student => {
             if (!allStudentsMap.has(student.email)) {
               allStudentsMap.set(student.email, {
-                ...student,
-                courses: [course.name]
+                name: student.name,
+                email: student.email,
+                courses: [{
+                  name: course.name,
+                  id: course._id,
+                  status: student.status
+                }]
               });
             } else {
               const existingStudent = allStudentsMap.get(student.email);
-              if (!existingStudent.courses.includes(course.name)) {
-                existingStudent.courses.push(course.name);
+              if (!existingStudent.courses.some(c => c.name === course.name)) {
+                existingStudent.courses.push({
+                  name: course.name,
+                  id: course._id,
+                  status: student.status
+                });
               }
             }
           });
@@ -93,7 +102,7 @@ const Students = () => {
     // Apply course filter
     if (selectedCourse !== 'all') {
       result = result.filter(student => 
-        student.courses.includes(selectedCourse)
+        student.courses.some(course => course.name === selectedCourse)
       );
     }
     
@@ -127,7 +136,14 @@ const Students = () => {
         // Update local state to reflect the change
         const updatedStudents = students.map(student => {
           if (student.email === studentEmail) {
-            return { ...student, status: 'approved' };
+            return {
+              ...student,
+              courses: student.courses.map(course => 
+                course.id === courseId
+                  ? { ...course, status: 'approved' }
+                  : course
+              )
+            };
           }
           return student;
         });
@@ -154,7 +170,14 @@ const Students = () => {
         // Update local state to reflect the change
         const updatedStudents = students.map(student => {
           if (student.email === studentEmail) {
-            return { ...student, status: 'rejected' };
+            return {
+              ...student,
+              courses: student.courses.map(course => 
+                course.id === courseId
+                  ? { ...course, status: 'rejected' }
+                  : course
+              )
+            };
           }
           return student;
         });
@@ -248,14 +271,14 @@ const Students = () => {
                           {student.courses.map((course, index) => (
                             <div key={index} className="course-tag-container">
                               <span className="course-tag">
-                                {course}
-                                {student.status === 'pending' && (
+                                {course.name}
+                                {course.status === 'pending' && (
                                   <div className="tag-actions">
                                     <button
                                       className="tag-approve-btn"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleApproveStudent(student.email, student.courseId);
+                                        handleApproveStudent(student.email, course.id);
                                       }}
                                       title="Approve for this course"
                                     >
@@ -265,7 +288,7 @@ const Students = () => {
                                       className="tag-reject-btn"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleRejectStudent(student.email, student.courseId);
+                                        handleRejectStudent(student.email, course.id);
                                       }}
                                       title="Reject for this course"
                                     >
