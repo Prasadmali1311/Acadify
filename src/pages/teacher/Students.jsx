@@ -232,7 +232,6 @@ const Students = () => {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Enrolled Courses</th>
-                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -247,38 +246,39 @@ const Students = () => {
                       <td className="student-courses">
                         <div className="course-tags">
                           {student.courses.map((course, index) => (
-                            <span key={index} className="course-tag">{course}</span>
+                            <div key={index} className="course-tag-container">
+                              <span className="course-tag">
+                                {course}
+                                {student.status === 'pending' && (
+                                  <div className="tag-actions">
+                                    <button
+                                      className="tag-approve-btn"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleApproveStudent(student.email, student.courseId);
+                                      }}
+                                      title="Approve for this course"
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      className="tag-reject-btn"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRejectStudent(student.email, student.courseId);
+                                      }}
+                                      title="Reject for this course"
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                )}
+                              </span>
+                            </div>
                           ))}
                         </div>
                       </td>
-                      <td className="student-status">
-                        {student.status === 'pending' && (
-                          <span className="status-badge pending">Pending Approval</span>
-                        )}
-                        {student.status === 'approved' && (
-                          <span className="status-badge approved">Approved</span>
-                        )}
-                        {student.status === 'rejected' && (
-                          <span className="status-badge rejected">Rejected</span>
-                        )}
-                      </td>
                       <td className="student-actions">
-                        {student.status === 'pending' && (
-                          <>
-                            <button 
-                              className="approve-btn"
-                              onClick={() => handleApproveStudent(student.email, student.courseId)}
-                            >
-                              Approve
-                            </button>
-                            <button 
-                              className="reject-btn"
-                              onClick={() => handleRejectStudent(student.email, student.courseId)}
-                            >
-                              Reject
-                            </button>
-                          </>
-                        )}
                         <button 
                           className="view-submissions-btn"
                           onClick={() => handleStudentClick(student.email)}
