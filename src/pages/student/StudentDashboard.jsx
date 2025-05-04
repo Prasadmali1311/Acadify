@@ -13,6 +13,7 @@ const StudentDashboard = () => {
   const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [enrollmentAlerts, setEnrollmentAlerts] = useState({ pending: [], rejected: [] });
 
   // Get user's first name
   const getUserFirstName = () => {
@@ -58,6 +59,34 @@ const StudentDashboard = () => {
       try {
         setIsLoading(true);
         setError('');
+
+        // Fetch enrolled courses to check status
+        const coursesResponse = await axios.get(getApiUrl('enrolledCourses'), {
+          params: { email: currentUser.email }
+        });
+
+        // Check for pending/rejected enrollments
+        const pendingEnrollments = coursesResponse.data.filter(
+          course => course.students.find(s => 
+            s.email === currentUser.email.toLowerCase() && 
+            s.status === 'pending'
+          )
+        );
+
+        const rejectedEnrollments = coursesResponse.data.filter(
+          course => course.students.find(s => 
+            s.email === currentUser.email.toLowerCase() && 
+            s.status === 'rejected'
+          )
+        );
+
+        // Set enrollment alerts
+        if (pendingEnrollments.length > 0 || rejectedEnrollments.length > 0) {
+          setEnrollmentAlerts({
+            pending: pendingEnrollments,
+            rejected: rejectedEnrollments
+          });
+        }
 
         // Fetch student's assignments
         const assignmentsResponse = await axios.get(getApiUrl('studentAssignments'), {
@@ -127,7 +156,7 @@ const StudentDashboard = () => {
         setError('');
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
+        setError(err.message || 'Failed to load dashboard data');
       } finally {
         setIsLoading(false);
       }
@@ -146,6 +175,40 @@ const StudentDashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Enrollment Status Alerts */}
+      {(enrollmentAlerts.pending.length > 0 || enrollmentAlerts.rejected.length > 0) && (
+        <div className="enrollment-alerts">
+          {enrollmentAlerts.pending.length > 0 && (
+            <div className="alert pending">
+              <span className="alert-icon">⏳</span>
+              <div className="alert-content">
+                <h4>Pending Enrollments</h4>
+                <p>Your enrollment in the following courses is awaiting instructor approval:</p>
+                <ul>
+                  {enrollmentAlerts.pending.map(course => (
+                    <li key={course._id}>{course.name}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+          {enrollmentAlerts.rejected.length > 0 && (
+            <div className="alert rejected">
+              <span className="alert-icon">❌</span>
+              <div className="alert-content">
+                <h4>Enrollment Rejected</h4>
+                <p>Your enrollment was not approved for the following courses:</p>
+                <ul>
+                  {enrollmentAlerts.rejected.map(course => (
+                    <li key={course._id}>{course.name}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="welcome-section">
         <div className="welcome-text">
           <h1 className="welcome-heading">

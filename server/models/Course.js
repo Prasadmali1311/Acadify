@@ -43,8 +43,8 @@ const courseSchema = new mongoose.Schema({
     },
     status: {
       type: String,
-      enum: ['active', 'completed', 'dropped'],
-      default: 'active'
+      enum: ['pending', 'approved', 'rejected', 'dropped'],
+      default: 'pending'
     }
   }],
   createdAt: {
@@ -53,9 +53,6 @@ const courseSchema = new mongoose.Schema({
   }
 });
 
-// Remove the unique index as it's causing issues with case sensitivity
-// courseSchema.index({ 'students.email': 1 }, { unique: true, sparse: true });
-
 const Course = mongoose.model('Course', courseSchema);
 
-export default Course; 
+export default Course;

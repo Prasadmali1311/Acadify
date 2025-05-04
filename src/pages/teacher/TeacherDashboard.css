@@ -422,4 +422,71 @@
   padding: 2rem;
   text-align: center;
   color: #6b7280;
-} 
+}
+
+.pending-approvals-alert {
+  background-color: #fff7ed;
+  border: 1px solid #f97316;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.alert-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.alert-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #c2410c;
+  margin: 0;
+}
+
+.alert-icon {
+  font-size: 1.5rem;
+}
+
+.course-pending-students {
+  background-color: white;
+  border: 1px solid #fed7aa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.course-pending-students:last-child {
+  margin-bottom: 0;
+}
+
+.course-pending-students h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ea580c;
+  margin: 0 0 0.5rem 0;
+}
+
+.course-pending-students p {
+  color: #9a3412;
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+}
+
+.view-students-btn {
+  background-color: #f97316;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.view-students-btn:hover {
+  background-color: #ea580c;
+}

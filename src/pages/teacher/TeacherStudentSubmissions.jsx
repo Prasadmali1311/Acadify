@@ -43,17 +43,35 @@ const TeacherStudentSubmissions = () => {
 
       try {
         setIsLoading(true);
-        const token = localStorage.getItem('token'); // Get auth token
+        const token = localStorage.getItem('token');
         if (!token) {
           throw new Error('Authentication required.');
         }
 
-        // Construct the correct API URL
+        // First check if student is approved in any of teacher's courses
+        const coursesResponse = await axios.get(getApiUrl('instructorCourses'), {
+          params: { instructorId: currentUser.id }
+        });
+
+        const studentCourses = coursesResponse.data.filter(course => 
+          course.students.some(student => 
+            student.email.toLowerCase() === studentEmail.toLowerCase() &&
+            student.status === 'approved'
+          )
+        );
+
+        if (studentCourses.length === 0) {
+          setError('This student is not approved in any of your courses.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Continue with existing submission fetching logic
         const apiUrl = `${getApiUrl('submissions')}/teacher/student/${encodeURIComponent(studentEmail)}`;
         
         const response = await axios.get(apiUrl, {
           headers: {
-            'Authorization': `Bearer ${token}` // Send token for backend auth
+            'Authorization': `Bearer ${token}`
           }
         });
 
@@ -408,4 +426,4 @@ const TeacherStudentSubmissions = () => {
   );
 };
 
-export default TeacherStudentSubmissions; 
+export default TeacherStudentSubmissions;

@@ -13,6 +13,7 @@ const TeacherDashboard = () => {
   const [error, setError] = useState('');
   const [recentActivities, setRecentActivities] = useState([]);
   const [upcomingTasks, setUpcomingTasks] = useState([]);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
 
   // Format time difference
   const formatTimeDifference = (date) => {
@@ -69,6 +70,26 @@ const TeacherDashboard = () => {
         });
         setActiveClasses(classesResponse.data.length);
 
+        // Check for pending student approvals
+        const pendingApprovals = classesResponse.data.reduce((acc, course) => {
+          const pending = course.students.filter(student => student.status === 'pending');
+          if (pending.length > 0) {
+            acc.push({
+              courseId: course._id,
+              courseName: course.name,
+              students: pending
+            });
+          }
+          return acc;
+        }, []);
+
+        const totalPendingApprovals = pendingApprovals.reduce(
+          (sum, course) => sum + course.students.length, 
+          0
+        );
+
+        setPendingApprovals(pendingApprovals);
+        
         // Fetch assignments created by this instructor
         const assignmentsResponse = await axios.get(getApiUrl('teacherAssignments'), {
           params: { instructorId: currentUser.id }
@@ -172,7 +193,7 @@ const TeacherDashboard = () => {
         setError(null);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data');
+        setError(err.message || 'Failed to load dashboard data');
       } finally {
         setIsLoading(false);
       }
@@ -191,6 +212,30 @@ const TeacherDashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Pending Approvals Alert */}
+      {pendingApprovals.length > 0 && (
+        <div className="pending-approvals-alert">
+          <div className="alert-header">
+            <span className="alert-icon">🔔</span>
+            <h3>Pending Student Approvals</h3>
+          </div>
+          {pendingApprovals.map(course => (
+            <div key={course.courseId} className="course-pending-students">
+              <h4>{course.courseName}</h4>
+              <p>{course.students.length} student(s) pending approval</p>
+              <button 
+                className="view-students-btn"
+                onClick={() => navigate('/teacher/students', { 
+                  state: { selectedCourse: course.courseName } 
+                })}
+              >
+                Review Students
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="welcome-section">
         <div className="welcome-text">
           <h1 className="welcome-heading">

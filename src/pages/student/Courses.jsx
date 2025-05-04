@@ -71,7 +71,8 @@ const Courses = () => {
             assignments: course.assignmentCount || 0,
             pendingCount: course.pendingCount || 0,
             submittedAssignments: submittedAssignments || 0,
-            description: course.description || 'No description available for this course.'
+            description: course.description || 'No description available for this course.',
+            status: course.students.find(s => s.email === email.toLowerCase())?.status || 'pending'
           };
         });
         
@@ -181,7 +182,10 @@ const Courses = () => {
       // Remove from available courses
       setAvailableCourses(availableCourses.filter(course => course.id !== courseId));
       
-      // Fetch the updated enrolled courses to get the correct assignment count
+      // Show success message
+      alert('Enrollment request submitted. Awaiting instructor approval.');
+      
+      // Refresh enrolled courses to show pending status
       const updatedEnrolledResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
       if (!updatedEnrolledResponse.ok) {
         throw new Error('Failed to refresh enrolled courses');
@@ -195,25 +199,21 @@ const Courses = () => {
           const completedAssignments = course.assignmentCount - course.pendingCount;
           progress = Math.round((completedAssignments / course.assignmentCount) * 100);
         }
-
-        
         
         return {
           id: course._id,
           name: course.name,
           instructor: course.instructorName || 'Unknown Instructor',
-          progress: progress, // Real progress instead of random
+          progress: progress,
           nextClass: course.nextClass || 'Not scheduled yet',
           assignments: course.assignmentCount || 0,
           pendingCount: course.pendingCount || 0,
-          description: course.description || 'No description available for this course.'
+          description: course.description || 'No description available for this course.',
+          status: course.students.find(s => s.email === email.toLowerCase())?.status || 'pending'
         };
       });
       
       setEnrolledCourses(updatedCourses);
-      
-      // Show success message
-      alert(`Successfully enrolled in ${enrolledCourse.name}!`);
     } catch (err) {
       console.error('Error enrolling in course:', err);
       alert('Failed to enroll in the course. Please try again later.');
@@ -328,7 +328,11 @@ const Courses = () => {
                           </div>
                           <div className="detail-item">
                             <span className="detail-icon">📝</span>
-                            <span className="detail-text">pending assignments: {course.pendingCount}</span>
+                            <span className="detail-text">Pending Assignments: {course.pendingCount}</span>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-icon">📋</span>
+                            <span className="detail-text">Status: {course.status}</span>
                           </div>
                         </div>
                         <div className="course-actions">
@@ -470,4 +474,4 @@ const Courses = () => {
   );
 };
 
-export default Courses; 
+export default Courses;

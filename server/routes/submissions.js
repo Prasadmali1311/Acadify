@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken'; // Import jsonwebtoken
 import Submission from '../models/Submission.js';
 import Assignment from '../models/Assignment.js';
+import Course from '../models/Course.js'; // Import Course model
 
 const router = express.Router();
 
@@ -201,22 +202,30 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Check if student is approved for this course
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const student = course.students.find(s => s.email.toLowerCase() === studentEmail.toLowerCase());
+    if (!student) {
+      return res.status(403).json({ error: 'Student not enrolled in this course' });
+    }
+
+    if (student.status !== 'approved') {
+      return res.status(403).json({ 
+        error: 'Cannot submit assignment - enrollment not yet approved by instructor',
+        status: student.status
+      });
+    }
+
     // Check if assignment exists
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) {
       return res.status(404).json({ error: 'Assignment not found' });
     }
     
-    // Check if deadline has passed
-    // const now = new Date();
-    // const deadline = new Date(assignment.deadline);
-    // if (now > deadline) {
-    //   return res.status(400).json({
-    //     error: 'Submission deadline has passed',
-    //     deadlineDate: deadline
-    //   });
-    // }
-
     // Check if a submission already exists
     const existingSubmission = await Submission.findOne({
       assignmentId,

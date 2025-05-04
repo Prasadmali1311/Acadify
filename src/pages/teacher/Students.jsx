@@ -113,6 +113,60 @@ const Students = () => {
     navigate(`/teacher/students/${encodeURIComponent(email)}/submissions`);
   };
 
+  const handleApproveStudent = async (studentEmail, courseId) => {
+    try {
+      const response = await axios.put(
+        `${getApiUrl('course')}/${courseId}/students/${studentEmail}/status`,
+        {
+          status: 'approved',
+          teacherId: currentUser.id
+        }
+      );
+
+      if (response.status === 200) {
+        // Update local state to reflect the change
+        const updatedStudents = students.map(student => {
+          if (student.email === studentEmail) {
+            return { ...student, status: 'approved' };
+          }
+          return student;
+        });
+        setStudents(updatedStudents);
+        setFilteredStudents(updatedStudents);
+      }
+    } catch (err) {
+      console.error('Error approving student:', err);
+      alert(err.response?.data?.error || 'Failed to approve student');
+    }
+  };
+
+  const handleRejectStudent = async (studentEmail, courseId) => {
+    try {
+      const response = await axios.put(
+        `${getApiUrl('course')}/${courseId}/students/${studentEmail}/status`,
+        {
+          status: 'rejected',
+          teacherId: currentUser.id
+        }
+      );
+
+      if (response.status === 200) {
+        // Update local state to reflect the change
+        const updatedStudents = students.map(student => {
+          if (student.email === studentEmail) {
+            return { ...student, status: 'rejected' };
+          }
+          return student;
+        });
+        setStudents(updatedStudents);
+        setFilteredStudents(updatedStudents);
+      }
+    } catch (err) {
+      console.error('Error rejecting student:', err);
+      alert(err.response?.data?.error || 'Failed to reject student');
+    }
+  };
+
   const displayLoading = isLoading || authLoading;
 
   return (
@@ -178,6 +232,7 @@ const Students = () => {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Enrolled Courses</th>
+                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -196,7 +251,34 @@ const Students = () => {
                           ))}
                         </div>
                       </td>
+                      <td className="student-status">
+                        {student.status === 'pending' && (
+                          <span className="status-badge pending">Pending Approval</span>
+                        )}
+                        {student.status === 'approved' && (
+                          <span className="status-badge approved">Approved</span>
+                        )}
+                        {student.status === 'rejected' && (
+                          <span className="status-badge rejected">Rejected</span>
+                        )}
+                      </td>
                       <td className="student-actions">
+                        {student.status === 'pending' && (
+                          <>
+                            <button 
+                              className="approve-btn"
+                              onClick={() => handleApproveStudent(student.email, student.courseId)}
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              className="reject-btn"
+                              onClick={() => handleRejectStudent(student.email, student.courseId)}
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
                         <button 
                           className="view-submissions-btn"
                           onClick={() => handleStudentClick(student.email)}
