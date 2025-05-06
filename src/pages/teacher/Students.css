@@ -213,6 +213,14 @@
   gap: 6px;
 }
 
+.tag-status {
+  font-size: 0.6rem;
+  padding: 2px 4px;
+  background-color: #f7c3aa;
+  color: #363636;
+  border-radius: 5px;
+}
+
 .course-tag-container {
   position: relative;
   display: inline-block;
@@ -225,10 +233,11 @@
   font-weight: 500;
   padding: 4px 8px;
   border-radius: 4px;
-  white-space: nowrap;
+  white-space: wrap;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  max-width: 400px;
 }
 
 .tag-actions {

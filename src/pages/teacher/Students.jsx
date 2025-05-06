@@ -296,6 +296,10 @@ const Students = () => {
                                     </button>
                                   </div>
                                 )}
+                                {course.status === 'rejected' && (
+                                  
+                                  <div className="tag-status">Rejected</div>
+                                )}
                               </span>
                             </div>
                           ))}

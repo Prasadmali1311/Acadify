@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getApiUrl } from '../../config/database';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,7 @@ const Courses = () => {
   const [activeTab, setActiveTab] = useState('enrolled');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState(null);
   const [enrolling, setEnrolling] = useState(false);
   const navigate = useNavigate();
@@ -23,79 +24,8 @@ const Courses = () => {
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  // Fetch enrolled courses
-  useEffect(() => {
-    async function fetchCourses() {
-      if (!currentUser) return;
-      
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Get the email from the user's profile
-        const email = currentUser.email;
-        if (!email) {
-          throw new Error('User email not found');
-        }
-        
-        console.log('Fetching enrolled courses for email:', email);
-        
-        // Fetch enrolled courses
-        const enrolledResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
-        
-        if (!enrolledResponse.ok) {
-          const errorData = await enrolledResponse.json().catch(() => ({}));
-          console.error('Error response:', errorData);
-          throw new Error(errorData.error || 'Failed to fetch enrolled courses');
-        }
-        
-        const enrolledData = await enrolledResponse.json();
-        console.log('Enrolled courses data:', enrolledData);
-        
-        // Transform data for UI
-        const formattedEnrolled = enrolledData.map(course => {
-          // Calculate real progress based on completed assignments
-          let progress = 0;
-          if (course.assignmentCount > 0) {
-            const completedAssignments = course.assignmentCount - course.pendingCount;
-            progress = Math.round((completedAssignments / course.assignmentCount) * 100);
-          }
-          let submittedAssignments = course.assignmentCount - course.pendingCount;
-          
-          return {
-            id: course._id,
-            name: course.name,
-            instructor: course.instructorName || 'Unknown Instructor',
-            progress: progress, // Real progress instead of random
-            nextClass: course.nextClass || 'Not scheduled',
-            assignments: course.assignmentCount || 0,
-            pendingCount: course.pendingCount || 0,
-            submittedAssignments: submittedAssignments || 0,
-            description: course.description || 'No description available for this course.',
-            status: course.students.find(s => s.email === email.toLowerCase())?.status || 'pending'
-          };
-        });
-        
-        console.log('Formatted enrolled courses:', formattedEnrolled);
-        setEnrolledCourses(formattedEnrolled);
-        
-        // Only fetch available courses if on that tab
-        if (activeTab === 'available') {
-          await fetchAvailableCourses();
-        }
-      } catch (err) {
-        console.error('Error fetching courses:', err);
-        setError(err.message || 'Failed to load courses. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    fetchCourses();
-  }, [currentUser, activeTab]);
-  
   // Function to fetch available courses (separate to only load when needed)
-  const fetchAvailableCourses = async () => {
+  const fetchAvailableCourses = useCallback(async () => {
     if (!currentUser) return;
     
     try {
@@ -111,37 +41,104 @@ const Courses = () => {
       }
       const allCourses = await allCoursesResponse.json();
       
-      // Get enrolled course IDs
-      const enrolledCourseIds = enrolledCourses.map(course => course.id);
-      
-      // Filter out courses the student is already enrolled in
-      const available = allCourses.filter(course => 
-        !enrolledCourseIds.includes(course._id)
-      );
-      
       // Transform data for UI
-      const formattedAvailable = available.map(course => ({
-        id: course._id,
-        name: course.name,
-        instructor: course.instructorName || 'Unknown Instructor',
-        enrolled: course.students?.length || 0,
-        duration: course.duration || '10 weeks',
-        level: course.level || 'Intermediate'
-      }));
+      const formattedAvailable = allCourses
+        .filter(course => !course.students.some(student => 
+          student.email.toLowerCase() === email.toLowerCase()
+        ))
+        .map(course => ({
+          id: course._id,
+          name: course.name,
+          instructor: course.instructorName || 'Unknown Instructor',
+          enrolled: course.students?.length || 0,
+          duration: course.duration || '10 weeks',
+          level: course.level || 'Intermediate'
+        }));
       
       setAvailableCourses(formattedAvailable);
-    } catch (err) {
-      console.error('Error fetching available courses:', err);
+    } catch {
       setError('Failed to load available courses. Please try again later.');
     }
-  };
+  }, [currentUser]);
+
+  // Fetch enrolled courses
+  useEffect(() => {
+    let isMounted = true;
+    
+    async function fetchCourses() {
+      if (!currentUser) return;
+      
+      try {
+        if (isInitialLoad) {
+          setIsLoading(true);
+        }
+        setError(null);
+        
+        const email = currentUser.email;
+        if (!email) {
+          throw new Error('User email not found');
+        }
+        
+        const enrolledResponse = await fetch(`${getApiUrl('enrolledCourses')}?email=${encodeURIComponent(email)}`);
+        
+        if (!enrolledResponse.ok) {
+          const errorData = await enrolledResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to fetch enrolled courses');
+        }
+        
+        const enrolledData = await enrolledResponse.json();
+        
+        // Transform data for UI
+        const formattedEnrolled = enrolledData.map(course => {
+          let progress = 0;
+          if (course.assignmentCount > 0) {
+            const completedAssignments = course.assignmentCount - course.pendingCount;
+            progress = Math.round((completedAssignments / course.assignmentCount) * 100);
+          }
+          let submittedAssignments = course.assignmentCount - course.pendingCount;
+          
+          return {
+            id: course._id,
+            name: course.name,
+            instructor: course.instructorName || 'Unknown Instructor',
+            progress: progress,
+            nextClass: course.nextClass || 'Not scheduled',
+            assignments: course.assignmentCount || 0,
+            pendingCount: course.pendingCount || 0,
+            submittedAssignments: submittedAssignments || 0,
+            description: course.description || 'No description available for this course.',
+            status: course.students.find(s => s.email === email.toLowerCase())?.status || 'pending'
+          };
+        });
+        
+        if (isMounted) {
+          setEnrolledCourses(formattedEnrolled);
+          setIsInitialLoad(false);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setError(error.message || 'Failed to load courses. Please try again later.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+    
+    fetchCourses();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser, isInitialLoad]);
   
   // Load available courses when switching to that tab
   useEffect(() => {
-    if (activeTab === 'available' && availableCourses.length === 0 && !isLoading) {
+    if (activeTab === 'available' && availableCourses.length === 0) {
       fetchAvailableCourses();
     }
-  }, [activeTab]);
+  }, [activeTab, availableCourses.length, fetchAvailableCourses]);
 
   // Handle enrolling in a course
   const handleEnroll = async (courseId) => {
@@ -157,8 +154,6 @@ const Courses = () => {
       const studentName = currentUser.firstName && currentUser.lastName
         ? `${currentUser.firstName} ${currentUser.lastName}`
         : currentUser.firstName || currentUser.lastName || 'Student';
-      
-      console.log('Enrolling with name:', studentName);
       
       // Enroll the student in the course
       const response = await fetch(`${getApiUrl('course')}/${courseId}/enroll`, {
@@ -176,9 +171,6 @@ const Courses = () => {
         throw new Error('Failed to enroll in course');
       }
       
-      // Find the enrolled course
-      const enrolledCourse = availableCourses.find(course => course.id === courseId);
-      
       // Remove from available courses
       setAvailableCourses(availableCourses.filter(course => course.id !== courseId));
       
@@ -193,7 +185,6 @@ const Courses = () => {
       
       const updatedEnrolledData = await updatedEnrolledResponse.json();
       const updatedCourses = updatedEnrolledData.map(course => {
-        // Calculate real progress based on completed assignments
         let progress = 0;
         if (course.assignmentCount > 0) {
           const completedAssignments = course.assignmentCount - course.pendingCount;
@@ -215,7 +206,6 @@ const Courses = () => {
       
       setEnrolledCourses(updatedCourses);
     } catch (err) {
-      console.error('Error enrolling in course:', err);
       alert('Failed to enroll in the course. Please try again later.');
     } finally {
       setEnrolling(false);
@@ -300,7 +290,7 @@ const Courses = () => {
                 {filteredEnrolledCourses.length > 0 ? (
                   <div className="enrolled-courses">
                     {filteredEnrolledCourses.map(course => (
-                      <div key={course.id} className="enrolled-course-item">
+                      <div key={course.id} className={`enrolled-course-item ${course.status}`}>
                         <div className="course-header">
                           <h3 className="course-name">{course.name}</h3>
                           <span className="course-instructor">{course.instructor}</span>
@@ -332,7 +322,9 @@ const Courses = () => {
                           </div>
                           <div className="detail-item">
                             <span className="detail-icon">📋</span>
-                            <span className="detail-text">Status: {course.status}</span>
+                            <span className="detail-text">
+                              Status: <span className={`status-badge ${course.status}`}>{course.status}</span>
+                            </span>
                           </div>
                         </div>
                         <div className="course-actions">
@@ -342,12 +334,14 @@ const Courses = () => {
                           >
                             About Course
                           </button>
-                          <button 
-                            className="action-button secondary"
-                            onClick={() => viewCourseAssignments(course.name)}
-                          >
-                            View Assignments
-                          </button>
+                          {course.status === 'approved' && (
+                            <button 
+                              className="action-button secondary"
+                              onClick={() => viewCourseAssignments(course.name)}
+                            >
+                              View Assignments
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -451,15 +445,17 @@ const Courses = () => {
               </div>
             </div>
             <div className="modal-footer">
-              <button 
-                className="action-button secondary"
-                onClick={() => {
-                  setShowCourseModal(false);
-                  viewCourseAssignments(selectedCourse.name);
-                }}
-              >
-                View Assignments
-              </button>
+              {selectedCourse.status === 'approved' && (
+                <button 
+                  className="action-button secondary"
+                  onClick={() => {
+                    setShowCourseModal(false);
+                    viewCourseAssignments(selectedCourse.name);
+                  }}
+                >
+                  View Assignments
+                </button>
+              )}
               <button 
                 className="close-button"
                 onClick={() => setShowCourseModal(false)}

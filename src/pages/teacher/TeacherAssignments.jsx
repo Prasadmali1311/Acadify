@@ -181,7 +181,7 @@ const TeacherAssignments = () => {
         instructorName: `${currentUser.firstName} ${currentUser.lastName}`.trim() || 'Teacher',
         deadline: new Date(newAssignmentDeadline),
         totalMarks: newAssignmentTotalMarks,
-        status: 'draft'
+        status: 'pending'
       };
       
       console.log("DEBUG: Assignment data to be created:", assignmentData);

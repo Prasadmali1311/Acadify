@@ -38,7 +38,7 @@ const assignmentSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['draft', 'active', 'pending', 'submitted', 'graded'],
-    default: 'draft'
+    default: 'pending'
   },
   createdAt: {
     type: Date,
