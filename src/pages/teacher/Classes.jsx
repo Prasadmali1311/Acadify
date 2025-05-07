@@ -108,7 +108,10 @@ const Classes = () => {
                     <h3>{course.name}</h3>
                     <p>{course.description || "No description provided"}</p>
                     <div className="course-students">
-                      {course.students?.length || 0} students enrolled
+                      {course.students.filter(course => course.status === 'approved').length || 0} students enrolled
+                    </div>
+                    <div className="course-students">
+                      {course.students.filter(course => course.status === 'pending').length || 0} pending approval
                     </div>
                     {course.code && <div className="course-code">Code: {course.code}</div>}
                   </div>

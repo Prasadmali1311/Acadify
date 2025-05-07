@@ -201,8 +201,16 @@ const Students = () => {
         </div>
         <div className="stats-card">
           <div className="stat-item">
-            <span className="stat-value">{students.length}</span>
+            <span className="stat-value">{students.filter(student =>
+            student.courses.some(course => course.status === 'approved')).length}
+            </span>
             <span className="stat-label">Total Students</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value">{students.filter(student =>
+            student.courses.some(course => course.status === 'pending')).length}
+            </span>
+            <span className="stat-label">Pending Approvals</span>
           </div>
           <div className="stat-item">
             <span className="stat-value">{courses.length}</span>

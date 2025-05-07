@@ -115,10 +115,11 @@
   transition: all 0.2s;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .content-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 5px 8px rgba(0, 0, 0, 0.4);
 }
 
 .stat-card {
@@ -130,10 +131,11 @@
   width: 100%;
   box-sizing: border-box;
   margin: 0;
+  box-shadow: 2px 4px 4px rgba(0, 0, 0, 0.2);
 }
 
 .stat-card:hover {
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 2px 8px 8px rgba(0,0,0,0.3);
 }
 
 .stat-card.blue {

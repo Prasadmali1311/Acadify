@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getApiUrl } from '../../config/database';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './TeacherDashboard.css';
 
 const TeacherDashboard = () => {
@@ -14,6 +15,8 @@ const TeacherDashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [upcomingTasks, setUpcomingTasks] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState([]);
+  const navigate = useNavigate();
+
 
   // Format time difference
   const formatTimeDifference = (date) => {
@@ -253,34 +256,34 @@ const TeacherDashboard = () => {
         <div className="stat-card blue">
           <h3 className="stat-title text-blue-600">Active Classes</h3>
           <p className="stat-value">{activeClasses}</p>
-          <p className="stat-trend">
+          {/* <p className="stat-trend">
             <span className="trend-indicator trend-up">
               <span className="text-lg">↑</span> 1
             </span>
             <span className="text-gray-500">from last semester</span>
-          </p>
+          </p> */}
         </div>
 
         <div className="stat-card green">
           <h3 className="stat-title text-green-600">Assignments to Grade</h3>
           <p className="stat-value">{assignmentsToGrade}</p>
-          <p className="stat-trend">
+          {/* <p className="stat-trend">
             <span className="trend-indicator trend-down">
               <span className="text-lg">↓</span> 3
             </span>
             <span className="text-gray-500">from yesterday</span>
-          </p>
+          </p> */}
         </div>
 
         <div className="stat-card purple">
           <h3 className="stat-title text-purple-600">Total Assignments</h3>
           <p className="stat-value">{totalAssignments}</p>
-          <p className="stat-trend">
+          {/* <p className="stat-trend">
             <span className="trend-indicator trend-up">
               <span className="text-lg">↑</span> 2
             </span>
             <span className="text-gray-500">from last month</span>
-          </p>
+          </p> */}
         </div>
       </div>
 

@@ -226,34 +226,34 @@ const StudentDashboard = () => {
         <div className="stat-card blue">
           <h3 className="stat-title text-blue-600">Pending Assignments</h3>
           <p className="stat-value">{pendingAssignments}</p>
-          <p className="stat-trend">
+          {/* <p className="stat-trend">
             <span className="trend-indicator trend-down">
               <span className="text-lg">↓</span> 2
             </span>
             <span className="text-gray-500">from last week</span>
-          </p>
+          </p> */}
         </div>
 
         <div className="stat-card green">
           <h3 className="stat-title text-green-600">Completed Assignments</h3>
           <p className="stat-value">{completedAssignments}</p>
-          <p className="stat-trend">
+          {/* <p className="stat-trend">
             <span className="trend-indicator trend-up">
               <span className="text-lg">↑</span> 3
             </span>
             <span className="text-gray-500">from last week</span>
-          </p>
+          </p> */}
         </div>
 
         <div className="stat-card purple">
           <h3 className="stat-title text-purple-600">Average Score</h3>
           <p className="stat-value">{averageScore}%</p>
-          <p className="stat-trend">
+          {/* <p className="stat-trend">
             <span className="trend-indicator trend-up">
               <span className="text-lg">↑</span> 5%
             </span>
             <span className="text-gray-500">from last month</span>
-          </p>
+          </p> */}
         </div>
       </div>
 

@@ -422,10 +422,10 @@ const TeacherAssignments = () => {
                 <h3>Submissions</h3>
                 <p>{viewingAssignment.submissions}/{viewingAssignment.totalStudents}</p>
               </div>
-              <div className="assignment-detail-item">
+              {/*<div className="assignment-detail-item">
                 <h3>Status</h3>
                 <p>{viewingAssignment.status.charAt(0).toUpperCase() + viewingAssignment.status.slice(1)}</p>
-              </div>
+              </div>*/}
               <div className="assignment-detail-item">
                 <h3>Total Marks</h3>
                 <p>{viewingAssignment.totalMarks}</p>
